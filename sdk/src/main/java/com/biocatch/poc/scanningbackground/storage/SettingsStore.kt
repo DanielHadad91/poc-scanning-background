@@ -29,6 +29,14 @@ class SettingsStore(context: Context) {
         get() = prefs.getLong(KEY_NEXT_RUN_AT, 0L)
         set(value) = prefs.edit().putLong(KEY_NEXT_RUN_AT, value).apply()
 
+    /**
+     * When the history was last cleared, or 0. Missed runs are counted from here, so a reset zeroes the
+     * counter yet a chain that is dead at reset time still starts counting up again.
+     */
+    var historyClearedAt: Long
+        get() = prefs.getLong(KEY_HISTORY_CLEARED_AT, 0L)
+        set(value) = prefs.edit().putLong(KEY_HISTORY_CLEARED_AT, value).apply()
+
     var scheduleOrigin: ScheduleOrigin
         get() = prefs.getString(KEY_ORIGIN, null)
             ?.let { name -> runCatching { ScheduleOrigin.valueOf(name) }.getOrNull() }
@@ -53,6 +61,7 @@ class SettingsStore(context: Context) {
         private const val KEY_INTERVAL_MINUTES = "interval_minutes"
         private const val KEY_NEXT_RUN_AT = "next_run_at"
         private const val KEY_ORIGIN = "schedule_origin"
+        private const val KEY_HISTORY_CLEARED_AT = "history_cleared_at"
         private const val KEY_AUTO_RENEW = "auto_renew"
         private const val KEY_FORCE_ALARM = "force_alarm_fallback"
     }

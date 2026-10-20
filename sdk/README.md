@@ -101,7 +101,8 @@ and recovers after a reboot — all with no UI.
 | `reschedule(context, reason): LogEntry` | Re-arm with the current interval. |
 | `setServerUrl` / `setIntervalMinutes` / `setAutoRenew` | Update settings. |
 | `history(context): List<LogEntry>` | Recorded runs, newest first. |
-| `clearHistory(context)` | Clear the history. |
+| `clearHistory(context)` | Clear the history and reset the missed-runs count to start from now. |
+| `missedRuns(context, now?): MissedRunsSummary` | Total scheduled runs missed over the whole history (every gap longer than this Android version's tolerance, plus the open one), the number of such gaps, and the longest gap. |
 | `state(context): ScanState` | Snapshot: scheduler, origin, next-run time, interval, server URL, QAP status, last run. |
 
 `ScanConfig` and `ScanState` are plain data classes; `LogEntry` (and its `RunStatus`/`Outcome`/`Trigger`

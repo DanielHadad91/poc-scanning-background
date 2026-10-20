@@ -42,7 +42,10 @@
     <string name="origin_recreated">Re-created on app entry: the previous schedule was not found, likely stopped by the system or a force stop</string>
     <string name="origin_existing">Schedule existed and kept running in the background</string>
     <string name="next_origin">Origin: %1$s</string>
-    <string name="missed_runs">Missed runs: %1$d (overdue past this version\'s expected max delay of ~%2$d min)</string>
+    <plurals name="missed_runs">
+        <item quantity="one">Missed runs: %1$d in total — in %2$d gap longer than this version\'s ~%3$d min tolerance; it lasted %4$s</item>
+        <item quantity="other">Missed runs: %1$d in total — across %2$d gaps longer than this version\'s ~%3$d min tolerance; longest gap %4$s</item>
+    </plurals>
     <string name="missed_none">Missed runs: 0 — on schedule</string>
 
     <!-- Status banner -->

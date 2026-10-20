@@ -42,6 +42,7 @@ object ScanScheduling {
             scheduler = scheduler.name,
             message = if (nextRunAt != null) reason else context.getString(R.string.log_schedule_failed, reason),
             nextRunAt = nextRunAt,
+            intervalMinutes = SettingsStore(context).intervalMinutes,
         )
         RunStore(context).append(entry)
         return entry

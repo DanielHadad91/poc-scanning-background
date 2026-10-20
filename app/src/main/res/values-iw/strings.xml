@@ -42,7 +42,11 @@
     <string name="origin_recreated">נוצר מחדש בכניסה לאפליקציה: התזמון הקודם לא נמצא, כנראה נעצר על ידי המערכת או force stop</string>
     <string name="origin_existing">תזמון קיים, המשיך לרוץ ברקע</string>
     <string name="next_origin">מקור: %1$s</string>
-    <string name="missed_runs">ריצות שהוחמצו: %1$d (באיחור מעבר למקסימום הצפוי בגרסה זו, כ-%2$d דק\')</string>
+    <plurals name="missed_runs">
+        <item quantity="one">ריצות שהוחמצו: %1$d בסך הכול — בפער אחד ארוך מהסובלנות של גרסה זו (כ-%3$d דק\'); משכו %4$s</item>
+        <item quantity="two">ריצות שהוחמצו: %1$d בסך הכול — בשני פערים ארוכים מהסובלנות של גרסה זו (כ-%3$d דק\'); הארוך ביותר %4$s</item>
+        <item quantity="other">ריצות שהוחמצו: %1$d בסך הכול — ב-%2$d פערים ארוכים מהסובלנות של גרסה זו (כ-%3$d דק\'); הארוך ביותר %4$s</item>
+    </plurals>
     <string name="missed_none">ריצות שהוחמצו: 0 — בזמן</string>
 
     <!-- Status banner -->

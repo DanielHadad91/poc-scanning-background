@@ -141,7 +141,7 @@ class MainActivity : LocaleAwareActivity() {
             .setTitle(R.string.clear_history_title)
             .setMessage(R.string.clear_history_message)
             .setPositiveButton(R.string.clear_history_confirm) { _, _ ->
-                runStore.clear()
+                ScanningSdk.clearHistory(this)
                 render()
                 toast(getString(R.string.toast_history_cleared))
             }
@@ -179,7 +179,7 @@ class MainActivity : LocaleAwareActivity() {
 
         renderBanner(scans, entries.firstOrNull { it.kind == EntryKind.SCHEDULE }, now)
         renderNextRun(now, schedulerName)
-        renderMissedRuns(entries, scans, now)
+        renderMissedRuns(now)
         renderLastRun(scans.firstOrNull(), now)
         renderSuccessfulRuns(scans)
         viewHistory.text = getString(R.string.view_history, entries.size)
@@ -265,22 +265,20 @@ class MainActivity : LocaleAwareActivity() {
     }
 
     /**
-     * How many scheduled runs are overdue past this version's expected max delay. Counted from the last
-     * scan (or the first scheduling, if none ran yet) using the interval plus a per-version grace, so a
-     * run merely deferred by Doze is tolerated. Clearing the history resets it to zero.
+     * Total scheduled runs missed over the whole history (every gap past this version's tolerance, plus
+     * the open one), so a hole stays counted after the runs resume. Clearing the history resets it.
      */
-    private fun renderMissedRuns(entries: List<LogEntry>, scans: List<LogEntry>, now: Long) {
-        val intervalMs = TimeUnit.MINUTES.toMillis(settings.intervalMinutes.toLong())
-        val baseline = scans.firstOrNull()?.timestamp ?: entries.lastOrNull()?.timestamp
-        if (intervalMs <= 0L || baseline == null) {
+    private fun renderMissedRuns(now: Long) {
+        val graceMinutes = SchedulingLimits.missGraceMinutes(Build.VERSION.SDK_INT)
+        val summary = ScanningSdk.missedRuns(this, now)
+        if (!summary.tracked) {
             missedRuns.visibility = View.GONE
             return
         }
-        val graceMs = TimeUnit.MINUTES.toMillis(SchedulingLimits.missGraceMinutes(Build.VERSION.SDK_INT).toLong())
-        val overdueMs = now - baseline - graceMs
-        val missed = if (overdueMs <= 0L) 0L else overdueMs / intervalMs
-        if (missed > 0L) {
-            missedRuns.text = getString(R.string.missed_runs, missed, SchedulingLimits.missGraceMinutes(Build.VERSION.SDK_INT))
+        if (summary.missed > 0L) {
+            missedRuns.text = resources.getQuantityString(
+                R.plurals.missed_runs, summary.gaps, summary.missed, summary.gaps, graceMinutes, format.countdown(summary.longestGapMillis),
+            )
             missedRuns.setTextColor(format.color(R.color.bad))
             missedRuns.setBackgroundResource(R.drawable.bg_banner_bad)
         } else {

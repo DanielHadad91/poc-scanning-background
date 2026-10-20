@@ -1,12 +1,16 @@
 package com.biocatch.poc.scanningbackground.sdk
 
 import android.content.Context
+import android.os.Build
 import com.biocatch.poc.scanningbackground.model.EntryKind
 import com.biocatch.poc.scanningbackground.model.LogEntry
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin
 import com.biocatch.poc.scanningbackground.scan.InstalledAppsScanner
 import com.biocatch.poc.scanningbackground.scheduling.BackgroundScheduler
+import com.biocatch.poc.scanningbackground.scheduling.MissedRuns
+import com.biocatch.poc.scanningbackground.scheduling.MissedRunsSummary
 import com.biocatch.poc.scanningbackground.scheduling.ScanScheduling
+import com.biocatch.poc.scanningbackground.scheduling.SchedulingLimits
 import com.biocatch.poc.scanningbackground.storage.RunStore
 import com.biocatch.poc.scanningbackground.storage.SettingsStore
 
@@ -73,8 +77,26 @@ object ScanningSdk {
     /** The recorded run history, newest first. */
     fun history(context: Context): List<LogEntry> = RunStore(context).all()
 
-    /** Clears the recorded history (and resets any derived counters the host computes from it). */
-    fun clearHistory(context: Context) = RunStore(context).clear()
+    /** Clears the recorded history and resets the missed-runs count to start from now. */
+    fun clearHistory(context: Context) {
+        RunStore(context).clear()
+        SettingsStore(context).historyClearedAt = System.currentTimeMillis()
+    }
+
+    /**
+     * Scheduled runs missed over the whole history: every gap longer than this Android version's
+     * tolerance, plus the open one, so a hole stays counted after the runs resume.
+     */
+    fun missedRuns(context: Context, now: Long = System.currentTimeMillis()): MissedRunsSummary {
+        val settings = SettingsStore(context)
+        return MissedRuns.summarize(
+            history = RunStore(context).all(),
+            now = now,
+            currentIntervalMinutes = settings.intervalMinutes,
+            graceMinutes = SchedulingLimits.missGraceMinutes(Build.VERSION.SDK_INT),
+            countFrom = settings.historyClearedAt,
+        )
+    }
 
     /** A snapshot the host can render without touching SDK internals. */
     fun state(context: Context): ScanState {
