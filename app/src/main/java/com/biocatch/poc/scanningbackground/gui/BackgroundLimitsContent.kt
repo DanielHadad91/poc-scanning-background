@@ -9,14 +9,21 @@ enum class ActionType { APP_DETAILS, BATTERY_OPTIMIZATION, BATTERY_SAVER, EXACT_
 
 data class GuideAction(val label: String, val type: ActionType, val url: String? = null)
 
-/** One card in the guide: a title, bullet lines, optional numbered steps, and optional buttons. */
+/**
+ * One card in the guide: a title, bullet lines, optional numbered steps, and optional buttons.
+ * [isCurrentDevice] marks the card for this device's manufacturer, so the main screen can link to it.
+ */
 data class GuideItem(
     val title: String,
     val tone: Tone = Tone.INFO,
     val lines: List<String> = emptyList(),
     val steps: List<String> = emptyList(),
     val actions: List<GuideAction> = emptyList(),
+    val isCurrentDevice: Boolean = false,
 )
+
+/** The short version of a manufacturer's steps, shown on the main screen. */
+data class DeviceTip(val display: String, val aggressive: Boolean, val highlights: String)
 
 /**
  * All the guide text, in Hebrew and English. Each builder takes [heb] and returns the matching
@@ -390,6 +397,8 @@ object BackgroundLimitsContent {
         val summaryEn: String,
         val stepsHe: List<String>,
         val stepsEn: List<String>,
+        val highlightsHe: String,
+        val highlightsEn: String,
     )
 
     // Official links verified reachable. Samsung/Xiaomi/Huawei officially document the behavior itself;
@@ -402,6 +411,8 @@ object BackgroundLimitsContent {
             summaryEn = "Clean Android. No aggressive background killing by the manufacturer; only the standard Android limits apply (Doze, App Standby, battery optimization). There is no \"Autostart\" here, and none is needed.",
             stepsHe = listOf("לרוב לא נדרשת פעולה. ליתר ביטחון: פתח הגדרות, עבור לאפליקציות, בחר את האפליקציה, פתח סוללה ובחר \"ללא הגבלה\"."),
             stepsEn = listOf("Usually no action is needed. For extra safety: open Settings, go to Apps, pick the app, open Battery and choose \"Unrestricted\"."),
+            highlightsHe = "להגדיר סוללה ל\"ללא הגבלה\"",
+            highlightsEn = "set Battery to \"Unrestricted\"",
         ),
         Oem(
             keys = listOf("samsung"), display = "Samsung (One UI)", slug = "samsung",
@@ -419,6 +430,8 @@ object BackgroundLimitsContent {
                 "In Settings, go to Battery then Background usage limits, and remove the app from \"Sleeping apps\" and \"Deep sleeping apps\".",
                 "Turn off \"Remove permissions if app isn't used\" for the app.",
             ),
+            highlightsHe = "להגדיר סוללה ל\"ללא הגבלה\" ולהוציא את האפליקציה מ\"אפליקציות בשינה\" ומ\"אפליקציות בשינה עמוקה\"",
+            highlightsEn = "set Battery to \"Unrestricted\" and remove the app from \"Sleeping apps\" and \"Deep sleeping apps\"",
         ),
         Oem(
             keys = listOf("xiaomi", "redmi", "poco"), display = "Xiaomi (MIUI / HyperOS)", slug = "xiaomi",
@@ -436,6 +449,8 @@ object BackgroundLimitsContent {
                 "In the app's settings choose Battery saver and pick \"No restrictions\".",
                 "In Recent apps, hold the app and lock it.",
             ),
+            highlightsHe = "להפעיל \"הפעלה אוטומטית\" (Autostart), להגדיר חיסכון סוללה ל\"ללא הגבלות\" ולנעול את האפליקציה במסך האחרונות",
+            highlightsEn = "enable \"Autostart\", set Battery saver to \"No restrictions\" and lock the app in Recent apps",
         ),
         Oem(
             keys = listOf("huawei", "honor"), display = "Huawei / Honor (EMUI)", slug = "huawei",
@@ -449,6 +464,8 @@ object BackgroundLimitsContent {
             stepsEn = listOf(
                 "Open Settings, go to Battery, open \"App launch\", pick the app, switch to manual management and enable all options (Auto-launch, Secondary launch, Run in background).",
             ),
+            highlightsHe = "ב\"הפעלת אפליקציות\" להעביר את האפליקציה לניהול ידני ולהפעיל הפעלה אוטומטית, הפעלה משנית ופעילות ברקע",
+            highlightsEn = "in \"App launch\" switch the app to manual and enable Auto-launch, Secondary launch and Run in background",
         ),
         Oem(
             keys = listOf("oneplus", "oppo", "realme"), display = "OnePlus / Oppo / Realme (ColorOS)", slug = "oppo",
@@ -466,6 +483,8 @@ object BackgroundLimitsContent {
                 "In Settings, open Auto-launch / Startup manager and enable it for the app.",
                 "In Recent apps, lock the app.",
             ),
+            highlightsHe = "לאפשר פעילות ברקע, להפעיל \"הפעלה אוטומטית\" (Auto-launch) ולנעול את האפליקציה במסך האחרונות",
+            highlightsEn = "allow background activity, enable \"Auto-launch\" and lock the app in Recent apps",
         ),
         Oem(
             keys = listOf("vivo", "iqoo"), display = "Vivo / iQOO (Funtouch / OriginOS)", slug = "vivo",
@@ -481,13 +500,33 @@ object BackgroundLimitsContent {
                 "Open Settings, go to Battery, allow \"High background power consumption\" for the app.",
                 "In Settings, open \"Autostart\" and enable it for the app.",
             ),
+            highlightsHe = "לאפשר \"צריכת חשמל גבוהה ברקע\" ולהפעיל \"הפעלה אוטומטית\" (Autostart)",
+            highlightsEn = "allow \"High background power consumption\" and enable \"Autostart\"",
         ),
     )
+
+    private fun detectOem(manufacturer: String): Oem? {
+        val key = manufacturer.lowercase()
+        return oems.firstOrNull { oem -> oem.keys.any { key.contains(it) } }
+    }
+
+    /** The main-screen summary for this device's manufacturer; a generic one when it has no card. */
+    fun deviceTip(heb: Boolean, manufacturer: String): DeviceTip {
+        val oem = detectOem(manufacturer)
+            ?: return DeviceTip(
+                display = manufacturer,
+                aggressive = true,
+                highlights = tr(heb,
+                    "לאפשר פעילות ברקע / סוללה \"ללא הגבלה\", ואם יש במכשיר \"הפעלה אוטומטית\" (Autostart) — להפעיל אותה",
+                    "allow background activity / set Battery to \"Unrestricted\", and if the device has \"Autostart\", enable it"),
+            )
+        return DeviceTip(oem.display, oem.aggressive, if (heb) oem.highlightsHe else oem.highlightsEn)
+    }
 
     /** OEM cards, with the current device's manufacturer first and highlighted. */
     fun manufacturers(heb: Boolean, manufacturer: String): List<GuideItem> {
         val key = manufacturer.lowercase()
-        val detected = oems.firstOrNull { oem -> oem.keys.any { key.contains(it) } }
+        val detected = detectOem(manufacturer)
         val items = mutableListOf(whatEachSettingDoes(heb))
 
         if (detected != null) {
@@ -513,6 +552,7 @@ object BackgroundLimitsContent {
                     "Only if the device has \"Autostart\" (present on Xiaomi, Oppo, Realme and Vivo but not Pixel) — enable it for the app.",
                 ),
                 actions = listOf(dkmaAction(heb, "$DKMA_BASE/${dkmaSlug(key)}")),
+                isCurrentDevice = true,
             )
         }
 
@@ -585,6 +625,7 @@ object BackgroundLimitsContent {
             lines = lines,
             steps = if (heb) oem.stepsHe else oem.stepsEn,
             actions = actions,
+            isCurrentDevice = detectedHere,
         )
     }
 

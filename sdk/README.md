@@ -44,6 +44,10 @@ Use the SDK's **fully-qualified class names** (do not use leading-dot relative n
 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 <!-- Only if you need to scan every installed app; Google Play restricts this permission. -->
 <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+<!-- Optional, UI only: lets YOUR app open the system "always run in the background" dialog for
+     itself (ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) instead of a settings list. Google Play
+     restricts this permission to accepted use cases. The SDK itself does not need it. -->
+<uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
 <application ...>
 

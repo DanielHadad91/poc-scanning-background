@@ -76,6 +76,36 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
+        <!-- This device's manufacturer: what it needs for reliable background runs, and a link to the steps -->
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                android:id="@+id/deviceTitle"
+                style="@style/Body"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/deviceTips"
+                style="@style/Body"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/deviceBattery"
+                style="@style/Body"
+                android:layout_marginTop="6dp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/deviceAllowBackground"
+                style="@style/PrimaryButton"
+                android:text="@string/device_allow_background" />
+
+            <Button
+                android:id="@+id/deviceOpenGuide"
+                style="@style/SecondaryButton" />
+        </LinearLayout>
+
         <Button
             android:id="@+id/runNow"
             style="@style/PrimaryButton"

@@ -23,6 +23,9 @@ class EntryFormatter(private val context: Context) {
     private val shortDateTimeFormat = SimpleDateFormat("dd/MM HH:mm:ss", Locale.getDefault())
     private val clockFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
     private val dateFormat = SimpleDateFormat("EEEE, dd/MM/yyyy", Locale.getDefault())
+    private val dayFormat = SimpleDateFormat("yyyyMMdd", Locale.US)
+    private val hourMinuteFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    private val dayHourMinuteFormat = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
 
     fun dateTime(millis: Long): String = dateTimeFormat.format(Date(millis))
     fun shortDateTime(millis: Long): String = shortDateTimeFormat.format(Date(millis))
@@ -36,6 +39,21 @@ class EntryFormatter(private val context: Context) {
         } else {
             context.getString(R.string.duration_seconds, String.format(Locale.US, "%.1f", millis / 1_000.0))
         }
+
+    /** The length of a stretch with no runs, in hours and minutes. */
+    fun gapDuration(millis: Long): String {
+        val totalMinutes = TimeUnit.MILLISECONDS.toMinutes(millis.coerceAtLeast(0))
+        return if (totalMinutes < 60) {
+            context.getString(R.string.gap_minutes, totalMinutes.toInt())
+        } else {
+            context.getString(R.string.gap_hours_minutes, (totalMinutes / 60).toInt(), (totalMinutes % 60).toInt())
+        }
+    }
+
+    /** A stretch's start or end: the time alone when it is today, otherwise with the date. */
+    fun gapPoint(millis: Long, now: Long): String =
+        (if (dayFormat.format(Date(millis)) == dayFormat.format(Date(now))) hourMinuteFormat else dayHourMinuteFormat)
+            .format(Date(millis))
 
     /** Time remaining until the next run, as a clock: HH:MM:SS. */
     fun countdown(millis: Long): String {
