@@ -34,6 +34,7 @@ class ScanRunner(private val context: Context) {
             appCount = report?.apps?.size,
             qapGranted = report?.qapGranted,
             detail = detail,
+            intervalMinutes = SettingsStore(context).intervalMinutes,
         )
         RunStore(context).append(entry)
         return entry

@@ -34,6 +34,7 @@ enum class EntryKind { SCAN, BOOT, SCHEDULE }
 /**
  * One line of the local history. Scan runs fill the run fields; boot and schedule events only set
  * [message], and a schedule event also sets [nextRunAt]. [scheduler] names the mechanism involved.
+ * [intervalMinutes] is the interval in force when the entry was written (absent on older entries).
  */
 data class LogEntry(
     val kind: EntryKind,
@@ -47,6 +48,7 @@ data class LogEntry(
     val detail: String? = null,
     val message: String? = null,
     val nextRunAt: Long? = null,
+    val intervalMinutes: Int? = null,
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("kind", kind.name)
@@ -60,6 +62,7 @@ data class LogEntry(
         put("detail", detail ?: JSONObject.NULL)
         put("message", message ?: JSONObject.NULL)
         put("nextRunAt", nextRunAt ?: JSONObject.NULL)
+        put("intervalMinutes", intervalMinutes ?: JSONObject.NULL)
     }
 
     companion object {
@@ -75,6 +78,8 @@ data class LogEntry(
             detail = json.stringOrNull("detail"),
             message = json.stringOrNull("message"),
             nextRunAt = if (json.isNull("nextRunAt")) null else json.getLong("nextRunAt"),
+            // isNull is also true for a missing key, so entries written before this field still load.
+            intervalMinutes = if (json.isNull("intervalMinutes")) null else json.getInt("intervalMinutes"),
         )
 
         private fun JSONObject.stringOrNull(key: String): String? = if (isNull(key)) null else getString(key)
