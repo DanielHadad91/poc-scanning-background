@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Log messages the SDK writes autonomously in the background (boot and self-scheduling),
+     where no caller-supplied text is available. Interactive reasons are passed in by the app. -->
+<resources>
+    <string name="log_boot">The device booted. The app woke up without being opened</string>
+    <string name="log_schedule_first">Scheduled on first open</string>
+    <string name="log_schedule_after_boot">Re-scheduled after device boot</string>
+    <string name="log_schedule_recreated">Re-created on app entry: the previous schedule was not found</string>
+    <string name="log_schedule_failed">The system refused to schedule (%1$s)</string>
+    <string name="log_schedule_after_run_failed">Failed to schedule the next run</string>
+</resources>

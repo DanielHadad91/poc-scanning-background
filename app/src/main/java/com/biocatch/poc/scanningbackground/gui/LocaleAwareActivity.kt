@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
 import com.biocatch.poc.scanningbackground.model.AppLanguage
-import com.biocatch.poc.scanningbackground.storage.SettingsStore
 import java.util.Locale
 
 /**
@@ -16,7 +15,7 @@ import java.util.Locale
 abstract class LocaleAwareActivity : Activity() {
 
     override fun attachBaseContext(newBase: Context) {
-        val tag = SettingsStore(newBase).language.tag
+        val tag = LanguageStore(newBase).language.tag
         if (tag == null) {
             super.attachBaseContext(newBase)
             return
@@ -40,5 +39,5 @@ abstract class LocaleAwareActivity : Activity() {
         return locale.language == "iw" || locale.language == "he"
     }
 
-    protected fun currentLanguage(): AppLanguage = SettingsStore(this).language
+    protected fun currentLanguage(): AppLanguage = LanguageStore(this).language
 }

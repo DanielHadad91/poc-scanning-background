@@ -3,7 +3,7 @@ package com.biocatch.poc.scanningbackground.network
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
-import com.biocatch.poc.scanningbackground.R
+import com.biocatch.poc.scanningbackground.sdk.R
 import java.security.KeyStore
 import java.security.cert.CertificateException
 import java.security.cert.CertificateFactory

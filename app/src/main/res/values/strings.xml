@@ -155,13 +155,9 @@
     <string name="row_next_run">Next run: %1$s</string>
 
     <!-- Messages written into the local history -->
-    <string name="log_boot">The device booted. The app woke up without being opened</string>
-    <string name="log_schedule_first">Scheduled on first open</string>
+    <!-- log_boot / log_schedule_first / log_schedule_after_boot / log_schedule_recreated /
+         log_schedule_failed / log_schedule_after_run_failed moved to the :sdk module. -->
     <string name="log_schedule_interval">Schedule changed to every %1$d minutes</string>
-    <string name="log_schedule_after_boot">Re-scheduled after device boot</string>
-    <string name="log_schedule_recreated">Re-created on app entry: the previous schedule was not found</string>
-    <string name="log_schedule_failed">The system refused to schedule (%1$s)</string>
-    <string name="log_schedule_after_run_failed">Failed to schedule the next run</string>
 
     <!-- Durations -->
     <string name="duration_ms">%1$d ms</string>

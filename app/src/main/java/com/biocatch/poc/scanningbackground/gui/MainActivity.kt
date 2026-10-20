@@ -30,6 +30,7 @@ import com.biocatch.poc.scanningbackground.scan.InstalledAppsScanner
 import com.biocatch.poc.scanningbackground.scheduling.BackgroundScheduler
 import com.biocatch.poc.scanningbackground.scheduling.ScanScheduling
 import com.biocatch.poc.scanningbackground.scheduling.SchedulingLimits
+import com.biocatch.poc.scanningbackground.sdk.ScanningSdk
 import com.biocatch.poc.scanningbackground.storage.RunStore
 import com.biocatch.poc.scanningbackground.storage.SettingsStore
 import java.util.Locale
@@ -107,7 +108,7 @@ class MainActivity : LocaleAwareActivity() {
         findViewById<Button>(R.id.clearHistory).setOnClickListener { confirmClearHistory() }
         findViewById<Button>(R.id.openLimits).setOnClickListener { startActivity(Intent(this, LimitsActivity::class.java)) }
 
-        ScanScheduling.ensureScheduled(this)?.let(::confirmSchedule)
+        ScanningSdk.start(this)?.let(::confirmSchedule)
     }
 
     override fun onStart() {
@@ -152,13 +153,14 @@ class MainActivity : LocaleAwareActivity() {
     private fun showLanguageDialog() {
         val values = arrayOf(AppLanguage.SYSTEM, AppLanguage.HEBREW, AppLanguage.ENGLISH)
         val labels = arrayOf(getString(R.string.lang_system), getString(R.string.lang_hebrew), getString(R.string.lang_english))
-        val current = values.indexOf(settings.language).coerceAtLeast(0)
+        val languageStore = LanguageStore(this)
+        val current = values.indexOf(languageStore.language).coerceAtLeast(0)
         AlertDialog.Builder(this)
             .setTitle(R.string.language_title)
             .setSingleChoiceItems(labels, current) { dialog, which ->
                 dialog.dismiss()
-                if (values[which] != settings.language) {
-                    settings.language = values[which]
+                if (values[which] != languageStore.language) {
+                    languageStore.language = values[which]
                     recreate()
                 }
             }
@@ -191,14 +193,15 @@ class MainActivity : LocaleAwareActivity() {
     /** Failures stay visible here after the fact: a schedule refusal, the last run, or any failure in the last 24 h. */
     private fun renderBanner(scans: List<LogEntry>, lastSchedule: LogEntry?, now: Long) {
         val lastScan = scans.firstOrNull()
+        val status = lastScan?.status
         val (text, background) = when {
             settings.nextRunAt == 0L && lastSchedule != null && lastSchedule.nextRunAt == null ->
                 getString(R.string.banner_schedule_failed, lastSchedule.message.orEmpty()) to R.drawable.bg_banner_bad
-            lastScan?.status == null -> getString(R.string.banner_no_runs) to R.drawable.bg_banner_neutral
-            lastScan.status.outcome == Outcome.SERVICE_LIMIT ->
-                getString(R.string.banner_service_limit, format.explanation(lastScan.status)) to R.drawable.bg_banner_warn
-            lastScan.status.outcome == Outcome.FAILED ->
-                getString(R.string.banner_failed, format.explanation(lastScan.status)) to R.drawable.bg_banner_bad
+            status == null -> getString(R.string.banner_no_runs) to R.drawable.bg_banner_neutral
+            status.outcome == Outcome.SERVICE_LIMIT ->
+                getString(R.string.banner_service_limit, format.explanation(status)) to R.drawable.bg_banner_warn
+            status.outcome == Outcome.FAILED ->
+                getString(R.string.banner_failed, format.explanation(status)) to R.drawable.bg_banner_bad
             else -> {
                 val dayAgo = now - TimeUnit.DAYS.toMillis(1)
                 val recentFailures = scans.count { it.timestamp >= dayAgo && it.status != RunStatus.SUCCESS }
@@ -289,14 +292,15 @@ class MainActivity : LocaleAwareActivity() {
     }
 
     private fun renderLastRun(lastScan: LogEntry?, now: Long) {
-        if (lastScan?.status == null) {
+        val status = lastScan?.status
+        if (status == null) {
             lastRunTitle.setText(R.string.no_runs_yet)
             lastRunTitle.setTextColor(format.color(R.color.text_muted))
             lastRunBody.text = ""
             return
         }
-        lastRunTitle.text = getString(R.string.run_title, format.outcomeLabel(lastScan.status.outcome), format.triggerLabel(lastScan.trigger))
-        lastRunTitle.setTextColor(format.outcomeColor(lastScan.status.outcome))
+        lastRunTitle.text = getString(R.string.run_title, format.outcomeLabel(status.outcome), format.triggerLabel(lastScan.trigger))
+        lastRunTitle.setTextColor(format.outcomeColor(status.outcome))
         lastRunBody.text = format.scanBody(lastScan, now)
     }
 

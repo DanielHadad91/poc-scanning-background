@@ -2,8 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
-// No dependencies: scheduling, storage, networking and UI use only Android framework APIs,
-// so the app needs no AndroidX library and runs on API 19 through 37.
+// The only dependency is our own :sdk module (which is itself framework-only, no AndroidX).
+// This module keeps the GUI and the manifest that declares the SDK's components and permissions.
 android {
     namespace = "com.biocatch.poc.scanningbackground"
     compileSdk {
@@ -29,4 +29,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+}
+
+dependencies {
+    implementation(project(":sdk"))
 }

@@ -3,7 +3,7 @@ package com.biocatch.poc.scanningbackground.receivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.biocatch.poc.scanningbackground.R
+import com.biocatch.poc.scanningbackground.sdk.R
 import com.biocatch.poc.scanningbackground.model.EntryKind
 import com.biocatch.poc.scanningbackground.model.LogEntry
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin

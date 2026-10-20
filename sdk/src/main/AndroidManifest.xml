@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Intentionally empty. The SDK ships code only: it declares no components and no permissions here.
+  The integrating app must declare ScanJobService, AlarmReceiver, BootReceiver and the required
+  permissions in its own AndroidManifest (see README). Keeping this manifest empty is a hard
+  constraint of this module.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />

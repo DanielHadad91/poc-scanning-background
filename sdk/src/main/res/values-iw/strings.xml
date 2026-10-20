@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="log_boot">המכשיר הודלק. האפליקציה התעוררה בלי שנפתחה</string>
+    <string name="log_schedule_first">תוזמן בפתיחה הראשונה</string>
+    <string name="log_schedule_after_boot">תוזמן מחדש אחרי הדלקת המכשיר</string>
+    <string name="log_schedule_recreated">נוצר מחדש בכניסה לאפליקציה: התזמון הקודם לא נמצא</string>
+    <string name="log_schedule_failed">המערכת סירבה לתזמן (%1$s)</string>
+    <string name="log_schedule_after_run_failed">לא הצליח לתזמן את הריצה הבאה</string>
+</resources>

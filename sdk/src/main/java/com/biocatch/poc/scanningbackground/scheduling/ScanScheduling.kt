@@ -1,7 +1,7 @@
 package com.biocatch.poc.scanningbackground.scheduling
 
 import android.content.Context
-import com.biocatch.poc.scanningbackground.R
+import com.biocatch.poc.scanningbackground.sdk.R
 import com.biocatch.poc.scanningbackground.model.EntryKind
 import com.biocatch.poc.scanningbackground.model.LogEntry
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin

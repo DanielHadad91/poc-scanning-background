@@ -37,20 +37,23 @@
             android:exported="false"
             android:label="@string/limits_title" />
 
+        <!-- SDK components. The client declares them here using the SDK's fully-qualified class names;
+             the SDK module ships no manifest entries of its own. -->
+
         <!-- API 21+: runs the scan when the app is closed, after a swipe and after a reboot. -->
         <service
-            android:name=".services.ScanJobService"
+            android:name="com.biocatch.poc.scanningbackground.services.ScanJobService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <!-- API 19-20: the AlarmManager fallback, triggered by our own explicit PendingIntent. -->
         <receiver
-            android:name=".receivers.AlarmReceiver"
+            android:name="com.biocatch.poc.scanningbackground.receivers.AlarmReceiver"
             android:exported="false" />
 
         <!-- BOOT_COMPLETED is a protected broadcast, so only the system can send it here. -->
         <receiver
-            android:name=".receivers.BootReceiver"
+            android:name="com.biocatch.poc.scanningbackground.receivers.BootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

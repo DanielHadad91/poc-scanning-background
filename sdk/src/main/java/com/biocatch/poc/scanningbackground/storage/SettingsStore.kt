@@ -2,7 +2,6 @@ package com.biocatch.poc.scanningbackground.storage
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.biocatch.poc.scanningbackground.model.AppLanguage
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin
 
 /** User settings plus the time the scheduled run is armed for. */
@@ -30,12 +29,6 @@ class SettingsStore(context: Context) {
         get() = prefs.getLong(KEY_NEXT_RUN_AT, 0L)
         set(value) = prefs.edit().putLong(KEY_NEXT_RUN_AT, value).apply()
 
-    var language: AppLanguage
-        get() = prefs.getString(KEY_LANGUAGE, null)
-            ?.let { name -> runCatching { AppLanguage.valueOf(name) }.getOrNull() }
-            ?: AppLanguage.SYSTEM
-        set(value) = prefs.edit().putString(KEY_LANGUAGE, value.name).apply()
-
     var scheduleOrigin: ScheduleOrigin
         get() = prefs.getString(KEY_ORIGIN, null)
             ?.let { name -> runCatching { ScheduleOrigin.valueOf(name) }.getOrNull() }
@@ -60,7 +53,6 @@ class SettingsStore(context: Context) {
         private const val KEY_INTERVAL_MINUTES = "interval_minutes"
         private const val KEY_NEXT_RUN_AT = "next_run_at"
         private const val KEY_ORIGIN = "schedule_origin"
-        private const val KEY_LANGUAGE = "app_language"
         private const val KEY_AUTO_RENEW = "auto_renew"
         private const val KEY_FORCE_ALARM = "force_alarm_fallback"
     }

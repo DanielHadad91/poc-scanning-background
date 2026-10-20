@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "poc-scanning-background"
 include(":app")
+include(":sdk")

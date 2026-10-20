@@ -1,5 +1,6 @@
 package com.biocatch.poc.scanningbackground.scheduling
 
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
@@ -44,6 +45,8 @@ class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler 
 
     override fun isScheduled(): Boolean = jobScheduler.allPendingJobs.any { it.id == SCHEDULED_JOB_ID }
 
+    // setPersisted requires RECEIVE_BOOT_COMPLETED, declared by the host app (an SDK declares no permissions).
+    @SuppressLint("MissingPermission")
     override fun schedule(trigger: Trigger, delayMillis: Long): Boolean {
         val extras = PersistableBundle().apply { putString(ScanJobService.EXTRA_TRIGGER, trigger.name) }
         val builder = JobInfo.Builder(jobId(trigger), ComponentName(context, ScanJobService::class.java))
