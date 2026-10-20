@@ -1,11 +1,9 @@
 package com.biocatch.poc.scanningbackground.gui
 
-import android.os.Build
-
 /** Accent color of a guide card. */
 enum class Tone { INFO, OK, WARN, BAD }
 
-enum class ActionType { APP_DETAILS, BATTERY_OPTIMIZATION, BATTERY_SAVER, EXACT_ALARM, OPEN_URL }
+enum class ActionType { BATTERY_OPTIMIZATION, BATTERY_SAVER, OPEN_URL }
 
 data class GuideAction(val label: String, val type: ActionType, val url: String? = null)
 
@@ -218,10 +216,10 @@ object BackgroundLimitsContent {
             tone = Tone.WARN,
             lines = if (heb) listOf(
                 "אזעקה מדויקת דורשת את ההרשאה SCHEDULE_EXACT_ALARM. גם הפעלת foreground service מהרקע הוגבלה.",
-                "השפעה: רק אם נפעיל תזמון מדויק נצטרך את ההרשאה. ברירת המחדל שלנו לא מדויקת.",
+                "השפעה: אין. האפליקציה לא משתמשת באזעקות מדויקות מ-Android 12 ולא מצהירה על SCHEDULE_EXACT_ALARM (בלי להוסיף הרשאות), ולכן אין צורך לאשר דבר. בלי ההצהרה הזו, מסך ההרשאה לאזעקות מדויקות מציג את האפליקציה עם מתג נעול.",
             ) else listOf(
                 "An exact alarm requires the SCHEDULE_EXACT_ALARM permission. Starting a foreground service from the background was also restricted.",
-                "Effect: only if we enable exact scheduling do we need the permission. Our default is not exact.",
+                "Effect: none. The app does not use exact alarms from Android 12 and does not declare SCHEDULE_EXACT_ALARM (no added permissions), so nothing needs approving. Without that declaration, the \"Alarms & reminders\" screen shows the app with a locked switch.",
             ),
             actions = listOf(docSource("$DOC/develop/background-work/services/alarms/schedule", heb)),
         ),
@@ -241,11 +239,11 @@ object BackgroundLimitsContent {
             title = "Android 14 (API 34)",
             tone = Tone.WARN,
             lines = if (heb) listOf(
-                "אזעקות מדויקות אסורות כברירת מחדל להתקנה חדשה, והמשתמש צריך לאשר ידנית.",
+                "אזעקות מדויקות אסורות כברירת מחדל להתקנה חדשה, והמשתמש צריך לאשר ידנית (לא רלוונטי לנו: אנחנו לא משתמשים בהן).",
                 "משימה שחוסמת את ה-main thread גורמת ל-ANR.",
                 "משימה עם תנאי רשת מחייבת את ההרשאה ACCESS_NETWORK_STATE (מוצהרת אצלנו).",
             ) else listOf(
-                "Exact alarms are off by default for a new install, and the user must allow them manually.",
+                "Exact alarms are off by default for a new install, and the user must allow them manually (not relevant to us: we do not use them).",
                 "A task that blocks the main thread causes an ANR.",
                 "A task with a network constraint requires the ACCESS_NETWORK_STATE permission (declared in our app).",
             ),
@@ -339,11 +337,11 @@ object BackgroundLimitsContent {
             lines = if (heb) listOf(
                 "Doze נכנס כשהמסך כבוי והמכשיר מנותק מהטעינה לאורך זמן. ב-Android 6 נדרש גם שהמכשיר יהיה נייח; מ-Android 7 הוא נכנס גם בתנועה. מסך כבוי לבדו לא מספיק.",
                 "כשהוא פעיל, ריצות וגישה לרשת נדחות לחלונות תחזוקה. מכאן העיכוב של הריצה המתוזמנת כשהמכשיר מונח ללא שימוש.",
-                "מה אפשר לעשות: להוציא את האפליקציה מאופטימיזציית סוללה (כפתור בקיצורי הדרך למטה). חיבור לטעינה מבטל את Doze.",
+                "מה אפשר לעשות: להגדיר את הסוללה של האפליקציה ל\"ללא הגבלה\" (הכפתור בקיצורי הדרך למטה פותח את הגדרות האפליקציה; שם בוחרים את פריט הסוללה). חיבור לטעינה מבטל את Doze.",
             ) else listOf(
                 "Doze starts when the screen is off and the device is unplugged for a while. On Android 6 the device must also be stationary; from Android 7 it starts even while moving. Screen off alone is not enough.",
                 "When active, runs and network access are deferred to maintenance windows. That is where the delay of a scheduled run comes from when the device is left at rest.",
-                "What to do: remove the app from battery optimization (button in the shortcuts below). Plugging in to charge disables Doze.",
+                "What to do: set the app's battery to \"Unrestricted\" (the button in the shortcuts below opens this app's settings; tap the battery item there). Plugging in to charge disables Doze.",
             ),
         ),
         GuideItem(
@@ -725,22 +723,20 @@ object BackgroundLimitsContent {
     )
 
     /** Buttons that jump straight to the relevant system settings. */
-    fun quickActions(heb: Boolean, sdkInt: Int): GuideItem {
-        val actions = mutableListOf(
-            GuideAction(tr(heb, "אופטימיזציית סוללה", "Battery optimization"), ActionType.BATTERY_OPTIMIZATION),
-            GuideAction(tr(heb, "מצב חיסכון סוללה", "Battery saver"), ActionType.BATTERY_SAVER),
-            GuideAction(tr(heb, "פרטי האפליקציה", "App details"), ActionType.APP_DETAILS),
-        )
-        if (sdkInt >= Build.VERSION_CODES.S) {
-            actions += GuideAction(tr(heb, "הרשאת אזעקות מדויקות (למצב מדויק)", "Exact-alarm permission (for exact mode)"), ActionType.EXACT_ALARM)
-        }
-        return GuideItem(
-            title = tr(heb, "קיצורי דרך להגדרות", "Settings shortcuts"),
-            tone = Tone.INFO,
-            lines = listOf(tr(heb,
+    fun quickActions(heb: Boolean): GuideItem = GuideItem(
+        title = tr(heb, "קיצורי דרך להגדרות", "Settings shortcuts"),
+        tone = Tone.INFO,
+        lines = listOf(
+            tr(heb,
                 "הכפתורים פותחים ישירות את מסכי ההגדרות הרלוונטיים במכשיר.",
-                "The buttons open the relevant system settings screens directly.")),
-            actions = actions,
-        )
-    }
+                "The buttons open the relevant system settings screens directly."),
+            tr(heb,
+                "אין כפתור לאזעקות מדויקות: האפליקציה לא משתמשת בהן ולא מצהירה על ההרשאה שלהן (SCHEDULE_EXACT_ALARM), ולכן אין שם מה להפעיל.",
+                "There is no exact-alarm button: the app does not use exact alarms and does not declare their permission (SCHEDULE_EXACT_ALARM), so there is nothing to turn on there."),
+        ),
+        actions = listOf(
+            GuideAction(tr(heb, "הגדרות האפליקציה (פריט הסוללה, ואז \"ללא הגבלה\")", "This app's settings (battery item, then \"Unrestricted\")"), ActionType.BATTERY_OPTIMIZATION),
+            GuideAction(tr(heb, "מצב חיסכון סוללה", "Battery saver"), ActionType.BATTERY_SAVER),
+        ),
+    )
 }
