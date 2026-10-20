@@ -43,10 +43,23 @@
     <string name="origin_existing">Schedule existed and kept running in the background</string>
     <string name="next_origin">Origin: %1$s</string>
     <plurals name="missed_runs">
-        <item quantity="one">Missed runs: %1$d in total — in %2$d gap longer than this version\'s ~%3$d min tolerance; it lasted %4$s</item>
-        <item quantity="other">Missed runs: %1$d in total — across %2$d gaps longer than this version\'s ~%3$d min tolerance; longest gap %4$s</item>
+        <item quantity="one">Missed runs: %1$d\nNo run happened from %2$s to %3$s (%4$s).\nThe first ~%5$d min of a stretch count as a normal delay and are not counted.</item>
+        <item quantity="other">Missed runs: %1$d\n%6$d stretches with no runs. Longest: from %2$s to %3$s (%4$s).\nThe first ~%5$d min of each stretch count as a normal delay and are not counted.</item>
     </plurals>
-    <string name="missed_none">Missed runs: 0 — on schedule</string>
+    <string name="missed_none">Missed runs: 0 — every run happened within the normal delay (up to ~%1$d min)</string>
+    <string name="gap_now">now</string>
+    <string name="gap_hours_minutes">%1$d h %2$02d min</string>
+    <string name="gap_minutes">%1$d min</string>
+
+    <!-- Main screen: the manufacturer of this device and what it needs for reliable background runs -->
+    <string name="device_title">Your device: %1$s</string>
+    <string name="device_tips">For reliable background runs, follow your manufacturer\'s instructions: %1$s.</string>
+    <string name="device_tips_clean">Clean Android: usually nothing is needed. Optional: %1$s.</string>
+    <string name="device_battery_exempt">Battery: allowed to run in the background ✓</string>
+    <string name="device_battery_optimized">Battery: optimized — Android and the manufacturer may delay or stop background runs</string>
+    <string name="device_allow_background">Allow running in the background</string>
+    <string name="device_open_guide">Full instructions for %1$s</string>
+    <string name="toast_battery_already_exempt">Already allowed to run in the background. Opening the app\'s settings</string>
 
     <!-- Status banner -->
     <string name="banner_no_runs">No run yet. The schedule is active, and you can also tap Run now</string>
@@ -60,13 +73,13 @@
     <string name="section_next_run">Next run</string>
     <string name="next_countdown">in %1$s</string>
     <string name="next_confirmed">Schedule confirmed: every %1$d minutes via %2$s. Runs even when the app is closed and after a reboot</string>
-    <string name="next_range">Expected range: %1$s to %2$s</string>
+    <string name="next_range">Normal range: %1$s to %2$s</string>
     <string name="limit_exact">Exact time: the run will start at the set time</string>
     <string name="limit_exact_doze">Exact time, but in Doze the run is deferred to the next maintenance window</string>
     <string name="limit_inexact_doze">Time is \"not before\": the run may be delayed, and in Doze it is deferred to the maintenance window</string>
     <string name="limit_job_near">Time is \"not before\": the run may be a few minutes late</string>
-    <string name="limit_job_doze">Time is \"not before\": usually the run is close to the time, but in Doze it is deferred to the next maintenance window</string>
-    <string name="limit_job_batched">Time is \"not before\": from Android 15 the system batches background network tasks, so the run may be delayed up to %1$d minutes, and while the screen is on it waits until the screen turns off</string>
+    <string name="limit_job_doze">Time is \"not before\": usually the run is close to the time, but in Doze it is deferred to the next maintenance window. It can take much longer if the phone is off or the manufacturer restricts the app; such stretches are counted below as missed runs</string>
+    <string name="limit_job_batched">Time is \"not before\": from Android 15 the system batches background network tasks, which normally delays a run by up to %1$d minutes. It can take much longer if the phone is off, in deep sleep (Doze), or the manufacturer restricts the app; such stretches are counted below as missed runs</string>
     <string name="next_overdue">The time has passed. The run is waiting for network or for a window the system allows</string>
     <string name="next_not_scheduled">Not scheduled. Tap Apply and schedule in settings</string>
     <string name="next_no_time">--:--:--</string>

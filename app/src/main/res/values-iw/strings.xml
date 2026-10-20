@@ -43,11 +43,23 @@
     <string name="origin_existing">תזמון קיים, המשיך לרוץ ברקע</string>
     <string name="next_origin">מקור: %1$s</string>
     <plurals name="missed_runs">
-        <item quantity="one">ריצות שהוחמצו: %1$d בסך הכול — בפער אחד ארוך מהסובלנות של גרסה זו (כ-%3$d דק\'); משכו %4$s</item>
-        <item quantity="two">ריצות שהוחמצו: %1$d בסך הכול — בשני פערים ארוכים מהסובלנות של גרסה זו (כ-%3$d דק\'); הארוך ביותר %4$s</item>
-        <item quantity="other">ריצות שהוחמצו: %1$d בסך הכול — ב-%2$d פערים ארוכים מהסובלנות של גרסה זו (כ-%3$d דק\'); הארוך ביותר %4$s</item>
+        <item quantity="one">ריצות שהוחמצו: %1$d\nמ-%2$s עד %3$s (%4$s) לא התבצעה אף ריצה.\nכ-%5$d הדקות הראשונות של פרק זמן כזה הן עיכוב תקין ולא נספרות.</item>
+        <item quantity="two">ריצות שהוחמצו: %1$d\nשני פרקי זמן בלי ריצות. הארוך ביותר: מ-%2$s עד %3$s (%4$s).\nכ-%5$d הדקות הראשונות של כל פרק זמן הן עיכוב תקין ולא נספרות.</item>
+        <item quantity="other">ריצות שהוחמצו: %1$d\n%6$d פרקי זמן בלי ריצות. הארוך ביותר: מ-%2$s עד %3$s (%4$s).\nכ-%5$d הדקות הראשונות של כל פרק זמן הן עיכוב תקין ולא נספרות.</item>
     </plurals>
-    <string name="missed_none">ריצות שהוחמצו: 0 — בזמן</string>
+    <string name="missed_none">ריצות שהוחמצו: 0 — כל הריצות התבצעו בתוך העיכוב התקין (עד כ-%1$d דק\')</string>
+    <string name="gap_now">עכשיו</string>
+    <string name="gap_hours_minutes">%1$d ש\' %2$02d דק\'</string>
+    <string name="gap_minutes">%1$d דק\'</string>
+
+    <string name="device_title">המכשיר שלך: %1$s</string>
+    <string name="device_tips">כדי שהריצות ברקע יעבדו בצורה תקינה, יש לפעול לפי ההנחיות של יצרן המכשיר: %1$s.</string>
+    <string name="device_tips_clean">Android נקי: בדרך כלל לא נדרש דבר. אופציונלי: %1$s.</string>
+    <string name="device_battery_exempt">סוללה: מותר לרוץ ברקע ✓</string>
+    <string name="device_battery_optimized">סוללה: במצב אופטימיזציה — Android והיצרן עלולים לעכב או לעצור את הריצות ברקע</string>
+    <string name="device_allow_background">לאפשר ריצה ברקע</string>
+    <string name="device_open_guide">ההנחיות המלאות ל-%1$s</string>
+    <string name="toast_battery_already_exempt">כבר מותר לרוץ ברקע. נפתחות הגדרות האפליקציה</string>
 
     <!-- Status banner -->
     <string name="banner_no_runs">עוד לא הייתה ריצה. התזמון פעיל, ואפשר גם ללחוץ על הרץ עכשיו</string>
@@ -61,13 +73,13 @@
     <string name="section_next_run">הריצה הבאה</string>
     <string name="next_countdown">בעוד %1$s</string>
     <string name="next_confirmed">התזמון מאושר: כל %1$d דקות דרך %2$s. ירוץ גם כשהאפליקציה סגורה ואחרי הדלקה מחדש</string>
-    <string name="next_range">טווח צפוי: %1$s עד %2$s</string>
+    <string name="next_range">טווח רגיל: %1$s עד %2$s</string>
     <string name="limit_exact">הזמן מדויק: ההרצה תתחיל בשעה שנקבעה</string>
     <string name="limit_exact_doze">הזמן מדויק, אך במצב שינה (Doze) ההרצה תידחה לחלון התחזוקה הבא</string>
     <string name="limit_inexact_doze">הזמן הוא \"לא לפני\": ההרצה עשויה להתעכב, ובמצב שינה (Doze) תידחה לחלון התחזוקה</string>
     <string name="limit_job_near">הזמן הוא \"לא לפני\": ההרצה עשויה להתעכב דקות ספורות</string>
-    <string name="limit_job_doze">הזמן הוא \"לא לפני\": בדרך כלל ההרצה קרובה לזמן, אך במצב שינה (Doze) תידחה לחלון התחזוקה הבא</string>
-    <string name="limit_job_batched">הזמן הוא \"לא לפני\": מ-Android 15 המערכת מקבצת משימות רקע שצורכות רשת, כך שההרצה עשויה להתעכב עד %1$d דקות, וכשהמסך דלוק להמתין עד שהמסך ייכבה</string>
+    <string name="limit_job_doze">הזמן הוא \"לא לפני\": בדרך כלל ההרצה קרובה לזמן, אך במצב שינה (Doze) תידחה לחלון התחזוקה הבא. זה יכול לקחת הרבה יותר אם הטלפון כבוי או שהיצרן מגביל את האפליקציה; פרקי זמן כאלה נספרים למטה כריצות שהוחמצו</string>
+    <string name="limit_job_batched">הזמן הוא \"לא לפני\": מ-Android 15 המערכת מקבצת משימות רקע שצורכות רשת, ולכן ריצה מתעכבת בדרך כלל עד %1$d דקות. זה יכול לקחת הרבה יותר אם הטלפון כבוי, בשינה עמוקה (Doze), או שהיצרן מגביל את האפליקציה; פרקי זמן כאלה נספרים למטה כריצות שהוחמצו</string>
     <string name="next_overdue">הזמן עבר. הריצה ממתינה לרשת או לחלון שהמערכת נותנת</string>
     <string name="next_not_scheduled">לא מתוזמן. אפשר ללחוץ על החל ותזמן בהגדרות</string>
     <string name="next_no_time">--:--:--</string>

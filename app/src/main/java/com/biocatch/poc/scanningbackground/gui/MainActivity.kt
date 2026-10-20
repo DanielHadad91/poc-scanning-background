@@ -52,6 +52,8 @@ class MainActivity : LocaleAwareActivity() {
     private lateinit var scheduleConfirmation: TextView
     private lateinit var scheduleOrigin: TextView
     private lateinit var missedRuns: TextView
+    private lateinit var deviceBattery: TextView
+    private lateinit var deviceAllowBackground: Button
     private lateinit var lastRunTitle: TextView
     private lateinit var lastRunBody: TextView
     private lateinit var successfulRuns: TextView
@@ -107,6 +109,7 @@ class MainActivity : LocaleAwareActivity() {
         viewHistory.setOnClickListener { startActivity(Intent(this, HistoryActivity::class.java)) }
         findViewById<Button>(R.id.clearHistory).setOnClickListener { confirmClearHistory() }
         findViewById<Button>(R.id.openLimits).setOnClickListener { startActivity(Intent(this, LimitsActivity::class.java)) }
+        setUpDeviceCard()
 
         ScanScheduling.ensureScheduled(this)?.let(::confirmSchedule)
     }
@@ -180,6 +183,7 @@ class MainActivity : LocaleAwareActivity() {
         renderBanner(scans, entries.firstOrNull { it.kind == EntryKind.SCHEDULE }, now)
         renderNextRun(now, schedulerName)
         renderMissedRuns(entries, now)
+        renderDeviceBattery()
         renderLastRun(scans.firstOrNull(), now)
         renderSuccessfulRuns(scans)
         viewHistory.text = getString(R.string.view_history, entries.size)
@@ -275,17 +279,55 @@ class MainActivity : LocaleAwareActivity() {
             return
         }
         if (summary.missed > 0L) {
+            val end = if (summary.longestGapOngoing) getString(R.string.gap_now) else format.gapPoint(summary.longestGapEnd, now)
             missedRuns.text = resources.getQuantityString(
-                R.plurals.missed_runs, summary.gaps, summary.missed, summary.gaps, graceMinutes, format.countdown(summary.longestGapMillis),
+                R.plurals.missed_runs, summary.gaps,
+                summary.missed, format.gapPoint(summary.longestGapStart, now), end,
+                format.gapDuration(summary.longestGapMillis), graceMinutes, summary.gaps,
             )
             missedRuns.setTextColor(format.color(R.color.bad))
             missedRuns.setBackgroundResource(R.drawable.bg_banner_bad)
         } else {
-            missedRuns.text = getString(R.string.missed_none)
+            missedRuns.text = getString(R.string.missed_none, graceMinutes)
             missedRuns.setTextColor(format.color(R.color.ok))
             missedRuns.setBackgroundResource(R.drawable.bg_banner_ok)
         }
         missedRuns.visibility = View.VISIBLE
+    }
+
+    /** The manufacturer's key steps (from the guide), with a link that opens the guide at this device's card. */
+    private fun setUpDeviceCard() {
+        val tip = BackgroundLimitsContent.deviceTip(isHebrew(), Build.MANUFACTURER)
+        val title = findViewById<TextView>(R.id.deviceTitle)
+        title.text = getString(R.string.device_title, tip.display)
+        title.setTextColor(format.color(if (tip.aggressive) R.color.warn else R.color.ok))
+        findViewById<TextView>(R.id.deviceTips).text =
+            getString(if (tip.aggressive) R.string.device_tips else R.string.device_tips_clean, tip.highlights)
+        findViewById<Button>(R.id.deviceOpenGuide).apply {
+            text = getString(R.string.device_open_guide, tip.display)
+            setOnClickListener {
+                startActivity(Intent(this@MainActivity, LimitsActivity::class.java).putExtra(LimitsActivity.EXTRA_FOCUS_DEVICE, true))
+            }
+        }
+        deviceBattery = findViewById(R.id.deviceBattery)
+        deviceAllowBackground = findViewById(R.id.deviceAllowBackground)
+        deviceAllowBackground.setOnClickListener {
+            if (!SystemSettings.openBatteryOptimization(this)) toast(getString(R.string.toast_no_settings))
+        }
+    }
+
+    /** Refreshed on every tick, so it updates as soon as the user returns from the system dialog. */
+    private fun renderDeviceBattery() {
+        val exempt = SystemSettings.isIgnoringBatteryOptimizations(this)
+        if (exempt == null) {
+            deviceBattery.visibility = View.GONE
+            deviceAllowBackground.visibility = View.GONE
+            return
+        }
+        deviceBattery.setText(if (exempt) R.string.device_battery_exempt else R.string.device_battery_optimized)
+        deviceBattery.setTextColor(format.color(if (exempt) R.color.ok else R.color.bad))
+        deviceBattery.visibility = View.VISIBLE
+        deviceAllowBackground.visibility = if (exempt) View.GONE else View.VISIBLE
     }
 
     private fun renderLastRun(lastScan: LogEntry?, now: Long) {

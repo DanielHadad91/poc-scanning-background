@@ -1,6 +1,5 @@
 package com.biocatch.poc.scanningbackground.gui
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -8,8 +7,10 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.MenuItem
+import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import com.biocatch.poc.scanningbackground.R
@@ -26,6 +27,7 @@ class LimitsActivity : LocaleAwareActivity() {
     private lateinit var container: LinearLayout
     private lateinit var inflater: LayoutInflater
     private lateinit var format: EntryFormatter
+    private var deviceCard: View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +38,14 @@ class LimitsActivity : LocaleAwareActivity() {
         inflater = LayoutInflater.from(this)
         format = EntryFormatter(this)
         buildGuide()
+        if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_FOCUS_DEVICE, false)) scrollToDeviceCard()
+    }
+
+    /** Opened from the main screen's device card: jump straight to this manufacturer's instructions. */
+    private fun scrollToDeviceCard() {
+        val card = deviceCard ?: return
+        val scroll = container.parent as? ScrollView ?: return
+        scroll.post { scroll.scrollTo(0, (card.top - PADDING).coerceAtLeast(0)) }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -113,6 +123,7 @@ class LimitsActivity : LocaleAwareActivity() {
 
     private fun addCard(item: GuideItem) {
         val card = inflater.inflate(R.layout.guide_card, container, false)
+        if (item.isCurrentDevice) deviceCard = card
         val title = card.findViewById<TextView>(R.id.cardTitle)
         title.text = item.title
         title.setTextColor(toneColor(item.tone))
@@ -148,38 +159,34 @@ class LimitsActivity : LocaleAwareActivity() {
     }
 
     private fun runAction(action: GuideAction) {
-        val intent = when (action.type) {
-            ActionType.APP_DETAILS -> appDetailsIntent()
-            ActionType.OPEN_URL -> Intent(Intent.ACTION_VIEW, Uri.parse(action.url))
-            ActionType.BATTERY_SAVER ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                    Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
-                } else {
-                    appDetailsIntent()
+        val opened = when (action.type) {
+            ActionType.BATTERY_OPTIMIZATION -> {
+                if (SystemSettings.isIgnoringBatteryOptimizations(this) == true) {
+                    Toast.makeText(this, R.string.toast_battery_already_exempt, Toast.LENGTH_LONG).show()
                 }
-            ActionType.BATTERY_OPTIMIZATION ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                } else {
-                    appDetailsIntent()
-                }
-            ActionType.EXACT_ALARM ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, appUri())
-                } else {
-                    appDetailsIntent()
-                }
+                SystemSettings.openBatteryOptimization(this)
+            }
+            else -> SystemSettings.openFirst(this, listOf(intentFor(action), SystemSettings.appDetailsIntent(this)))
         }
-        try {
-            startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
-            Toast.makeText(this, R.string.toast_no_settings, Toast.LENGTH_LONG).show()
-        }
+        if (!opened) Toast.makeText(this, R.string.toast_no_settings, Toast.LENGTH_LONG).show()
     }
 
-    private fun appDetailsIntent(): Intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, appUri())
-
-    private fun appUri(): Uri = Uri.fromParts("package", packageName, null)
+    private fun intentFor(action: GuideAction): Intent = when (action.type) {
+        ActionType.OPEN_URL -> Intent(Intent.ACTION_VIEW, Uri.parse(action.url))
+        ActionType.BATTERY_SAVER ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
+            } else {
+                SystemSettings.appDetailsIntent(this)
+            }
+        ActionType.EXACT_ALARM ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, SystemSettings.appUri(this))
+            } else {
+                SystemSettings.appDetailsIntent(this)
+            }
+        ActionType.APP_DETAILS, ActionType.BATTERY_OPTIMIZATION -> SystemSettings.appDetailsIntent(this)
+    }
 
     private fun toneColor(tone: Tone): Int = format.color(
         when (tone) {
@@ -190,7 +197,9 @@ class LimitsActivity : LocaleAwareActivity() {
         }
     )
 
-    private companion object {
-        const val PADDING = 36
+    companion object {
+        /** Boolean extra: open scrolled to the card for this device's manufacturer. */
+        const val EXTRA_FOCUS_DEVICE = "focus_device"
+        private const val PADDING = 36
     }
 }
