@@ -123,7 +123,7 @@ Sources:
 ### Android 12 (API 31) — exact alarms
 
 - An exact alarm requires the SCHEDULE_EXACT_ALARM permission. Starting a foreground service from the background was also restricted.
-- Effect: only if we enable exact scheduling do we need the permission. Our default is not exact.
+- Effect: none. The app does not use exact alarms from Android 12 and does not declare SCHEDULE_EXACT_ALARM (no added permissions), so nothing needs approving. Without that declaration, the "Alarms & reminders" screen shows the app with a locked switch.
 
 Source: [Official source (developer.android.com)](https://developer.android.com/develop/background-work/services/alarms/schedule)
 
@@ -136,7 +136,7 @@ Source: [Official source (developer.android.com)](https://developer.android.com/
 
 ### Android 14 (API 34)
 
-- Exact alarms are off by default for a new install, and the user must allow them manually.
+- Exact alarms are off by default for a new install, and the user must allow them manually (not relevant to us: we do not use them).
 - A task that blocks the main thread causes an ANR.
 - A task with a network constraint requires the ACCESS_NETWORK_STATE permission (declared in our app).
 
@@ -195,7 +195,7 @@ Source: [Source: per-bucket limits](https://developer.android.com/topic/performa
 
 - Doze starts when the screen is off and the device is unplugged for a while. On Android 6 the device must also be stationary; from Android 7 it starts even while moving. Screen off alone is not enough.
 - When active, runs and network access are deferred to maintenance windows. That is where the delay of a scheduled run comes from when the device is left at rest.
-- What to do: remove the app from battery optimization (button in the shortcuts below). Plugging in to charge disables Doze.
+- What to do: set the app's battery to "Unrestricted" (the button in the shortcuts below opens this app's settings; tap the battery item there). Plugging in to charge disables Doze.
 
 ### Android 15+ (API 35) — screen off actually helps
 
@@ -331,12 +331,11 @@ Sources:
 ## Settings shortcuts
 
 - The buttons open the relevant system settings screens directly.
+- There is no exact-alarm button: the app does not use exact alarms and does not declare their permission (SCHEDULE_EXACT_ALARM), so there is nothing to turn on there.
 
 Buttons (open system settings, not web links):
-- Battery optimization
+- This app's settings (battery item, then "Unrestricted")
 - Battery saver
-- App details
-- Exact-alarm permission (for exact mode) — shown only on Android 12 (API 31) and up
 
 ---
 

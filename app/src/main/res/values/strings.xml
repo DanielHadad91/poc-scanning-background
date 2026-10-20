@@ -56,8 +56,9 @@
     <string name="device_tips">For reliable background runs, follow your manufacturer\'s instructions: %1$s.</string>
     <string name="device_tips_clean">Clean Android: usually nothing is needed. Optional: %1$s.</string>
     <string name="device_battery_exempt">Battery: allowed to run in the background ✓</string>
-    <string name="device_battery_optimized">Battery: optimized — Android and the manufacturer may delay or stop background runs</string>
-    <string name="device_allow_background">Allow running in the background</string>
+    <string name="device_battery_optimized">Battery: optimized — Android and the manufacturer may delay or stop background runs. To fix it: in this app\'s settings tap the battery item and choose \"Unrestricted\".</string>
+    <string name="device_allow_background">Open this app\'s settings (battery)</string>
+    <string name="toast_battery_how_to">In this app\'s settings, tap the battery item and choose \"Unrestricted\"</string>
     <string name="device_open_guide">Full instructions for %1$s</string>
     <string name="toast_battery_already_exempt">Already allowed to run in the background. Opening the app\'s settings</string>
 

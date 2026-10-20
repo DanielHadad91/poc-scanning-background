@@ -10,11 +10,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Re-arms the schedule after a reboot; JobScheduler also needs it for persisted jobs. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <!-- Opens the "always run in the background" dialog for this app directly. Google Play restricts
-         this permission to accepted use cases. -->
-    <uses-permission
-        android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
-        tools:ignore="BatteryLife" />
 
     <application
         android:allowBackup="false"

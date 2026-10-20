@@ -79,7 +79,7 @@ class LimitsActivity : LocaleAwareActivity() {
         BackgroundLimitsContent.manufacturers(heb, Build.MANUFACTURER).forEach(::addCard)
 
         addSection(getString(R.string.section_quick_actions))
-        addCard(BackgroundLimitsContent.quickActions(heb, Build.VERSION.SDK_INT))
+        addCard(BackgroundLimitsContent.quickActions(heb))
 
         addSection(getString(R.string.section_glossary))
         BackgroundLimitsContent.glossary(heb).forEach(::addCard)
@@ -160,33 +160,19 @@ class LimitsActivity : LocaleAwareActivity() {
 
     private fun runAction(action: GuideAction) {
         val opened = when (action.type) {
-            ActionType.BATTERY_OPTIMIZATION -> {
-                if (SystemSettings.isIgnoringBatteryOptimizations(this) == true) {
-                    Toast.makeText(this, R.string.toast_battery_already_exempt, Toast.LENGTH_LONG).show()
-                }
-                SystemSettings.openBatteryOptimization(this)
-            }
-            else -> SystemSettings.openFirst(this, listOf(intentFor(action), SystemSettings.appDetailsIntent(this)))
+            ActionType.BATTERY_OPTIMIZATION -> SystemSettings.openBatteryOptimization(this)
+            ActionType.BATTERY_SAVER -> SystemSettings.openFirst(this, listOf(batterySaverIntent(), SystemSettings.appDetailsIntent(this)))
+            ActionType.OPEN_URL -> SystemSettings.openFirst(this, listOf(Intent(Intent.ACTION_VIEW, Uri.parse(action.url))))
         }
         if (!opened) Toast.makeText(this, R.string.toast_no_settings, Toast.LENGTH_LONG).show()
     }
 
-    private fun intentFor(action: GuideAction): Intent = when (action.type) {
-        ActionType.OPEN_URL -> Intent(Intent.ACTION_VIEW, Uri.parse(action.url))
-        ActionType.BATTERY_SAVER ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
-            } else {
-                SystemSettings.appDetailsIntent(this)
-            }
-        ActionType.EXACT_ALARM ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, SystemSettings.appUri(this))
-            } else {
-                SystemSettings.appDetailsIntent(this)
-            }
-        ActionType.APP_DETAILS, ActionType.BATTERY_OPTIMIZATION -> SystemSettings.appDetailsIntent(this)
-    }
+    private fun batterySaverIntent(): Intent =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
+        } else {
+            SystemSettings.appDetailsIntent(this)
+        }
 
     private fun toneColor(tone: Tone): Int = format.color(
         when (tone) {

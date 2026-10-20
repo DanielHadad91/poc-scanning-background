@@ -1,6 +1,5 @@
 package com.biocatch.poc.scanningbackground.gui
 
-import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -8,6 +7,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
+import android.widget.Toast
+import com.biocatch.poc.scanningbackground.R
 
 /** Opens this app's system settings screens, falling back to a more generic screen when one is missing. */
 object SystemSettings {
@@ -20,19 +21,27 @@ object SystemSettings {
     }
 
     /**
-     * Not exempt yet: the system dialog for this app only ("let it always run in the background"), so
-     * the user does not search a list. Already exempt, or API < 23: this app's App info screen.
+     * Opens this app's own App info screen, where the battery item -> "Unrestricted" is one tap away,
+     * and says so in a toast. Falls back to the system-wide battery optimization list.
+     *
+     * Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS would show a per-app "always run in the
+     * background" dialog directly, which is the most reliable fix for OEM and Doze delays, but it
+     * requires declaring REQUEST_IGNORE_BATTERY_OPTIMIZATIONS. This app must not add permissions
+     * beyond its original set, so that action is deliberately not used.
      */
-    // REQUEST_IGNORE_BATTERY_OPTIMIZATIONS is limited by Google Play policy to accepted use cases.
-    @SuppressLint("BatteryLife")
     fun openBatteryOptimization(context: Context): Boolean {
-        val candidates = mutableListOf<Intent>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && isIgnoringBatteryOptimizations(context) == false) {
-            candidates += Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, appUri(context))
+        val candidates = mutableListOf(appDetailsIntent(context))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             candidates += Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
         }
-        candidates += appDetailsIntent(context)
-        return openFirst(context, candidates)
+        val hint = when (isIgnoringBatteryOptimizations(context)) {
+            true -> R.string.toast_battery_already_exempt
+            false -> R.string.toast_battery_how_to
+            null -> null
+        }
+        val opened = openFirst(context, candidates)
+        if (opened && hint != null) Toast.makeText(context, hint, Toast.LENGTH_LONG).show()
+        return opened
     }
 
     fun appDetailsIntent(context: Context): Intent =

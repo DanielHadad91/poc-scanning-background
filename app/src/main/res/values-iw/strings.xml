@@ -56,8 +56,9 @@
     <string name="device_tips">כדי שהריצות ברקע יעבדו בצורה תקינה, יש לפעול לפי ההנחיות של יצרן המכשיר: %1$s.</string>
     <string name="device_tips_clean">Android נקי: בדרך כלל לא נדרש דבר. אופציונלי: %1$s.</string>
     <string name="device_battery_exempt">סוללה: מותר לרוץ ברקע ✓</string>
-    <string name="device_battery_optimized">סוללה: במצב אופטימיזציה — Android והיצרן עלולים לעכב או לעצור את הריצות ברקע</string>
-    <string name="device_allow_background">לאפשר ריצה ברקע</string>
+    <string name="device_battery_optimized">סוללה: במצב אופטימיזציה — Android והיצרן עלולים לעכב או לעצור את הריצות ברקע. לתיקון: בהגדרות האפליקציה בוחרים את פריט הסוללה ואז \"ללא הגבלה\".</string>
+    <string name="device_allow_background">פתיחת הגדרות האפליקציה (סוללה)</string>
+    <string name="toast_battery_how_to">בהגדרות האפליקציה בוחרים את פריט הסוללה ואז \"ללא הגבלה\"</string>
     <string name="device_open_guide">ההנחיות המלאות ל-%1$s</string>
     <string name="toast_battery_already_exempt">כבר מותר לרוץ ברקע. נפתחות הגדרות האפליקציה</string>
 
