@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true">
+
+    <!-- Takes the initial focus, so the URL field does not grab it and open the keyboard on launch. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/statusBanner"
+            style="@style/Banner"
+            android:background="@drawable/bg_banner_neutral" />
+
+        <!-- Next run: the clock, the countdown and the scheduling confirmation -->
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                style="@style/CardTitle"
+                android:text="@string/section_next_run" />
+
+            <TextView
+                android:id="@+id/nextClock"
+                style="@style/BigClock"
+                android:text="@string/next_no_time" />
+
+            <TextView
+                android:id="@+id/nextDate"
+                style="@style/Muted"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/nextCountdown"
+                style="@style/Body"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/nextRange"
+                style="@style/Body"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/nextLimit"
+                style="@style/Muted"
+                android:layout_marginTop="2dp"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/scheduleConfirmation"
+                style="@style/Muted"
+                android:layout_marginTop="8dp"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/scheduleOrigin"
+                style="@style/Muted"
+                android:layout_marginTop="2dp"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/missedRuns"
+                style="@style/Body"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/runNow"
+            style="@style/PrimaryButton"
+            android:text="@string/run_now" />
+
+        <!-- Last run, including any failure -->
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                style="@style/CardTitle"
+                android:text="@string/section_last_run" />
+
+            <TextView
+                android:id="@+id/lastRunTitle"
+                style="@style/Body"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <!-- Not selectable: a focused selectable TextView whose text changes every tick pins the scroll position. -->
+            <TextView
+                android:id="@+id/lastRunBody"
+                style="@style/Body"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- Successful runs: when each ran and how long it took -->
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                style="@style/CardTitle"
+                android:text="@string/section_successful_runs" />
+
+            <TextView
+                android:id="@+id/successfulRuns"
+                style="@style/Body"
+                android:lineSpacingExtra="6dp" />
+
+            <Button
+                android:id="@+id/viewHistory"
+                style="@style/SecondaryButton" />
+
+            <Button
+                android:id="@+id/clearHistory"
+                style="@style/SecondaryButton"
+                android:text="@string/clear_history" />
+        </LinearLayout>
+
+        <!-- Settings -->
+        <LinearLayout style="@style/Card">
+
+            <TextView
+                style="@style/CardTitle"
+                android:text="@string/section_settings" />
+
+            <TextView
+                style="@style/Body"
+                android:text="@string/label_server"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/serverUrl"
+                style="@style/Input"
+                android:layout_marginTop="6dp"
+                android:hint="@string/server_url_hint"
+                android:importantForAutofill="no"
+                android:inputType="textUri"
+                android:textDirection="ltr" />
+
+            <TextView
+                style="@style/Muted"
+                android:layout_marginTop="6dp"
+                android:text="@string/server_hint" />
+
+            <Button
+                android:id="@+id/createFresh"
+                style="@style/PrimaryButton"
+                android:text="@string/btn_create_fresh" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/saveUrl"
+                    style="@style/SecondaryButton"
+                    android:layout_width="0dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:text="@string/save_url" />
+
+                <Button
+                    android:id="@+id/openViewer"
+                    style="@style/SecondaryButton"
+                    android:layout_width="0dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:text="@string/view_received" />
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/autoRenew"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/auto_renew_label"
+                android:textColor="@color/text"
+                android:textSize="14sp" />
+
+            <TextView
+                style="@style/Body"
+                android:layout_marginTop="18dp"
+                android:text="@string/label_interval"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/intervalMinutes"
+                    style="@style/Input"
+                    android:layout_width="110dp"
+                    android:gravity="center"
+                    android:hint="@string/minutes_hint"
+                    android:importantForAutofill="no"
+                    android:inputType="number"
+                    android:maxLength="6" />
+
+                <Button
+                    android:id="@+id/applyInterval"
+                    style="@style/PrimaryButton"
+                    android:layout_width="0dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/apply_interval" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/intervalNote"
+                style="@style/Muted"
+                android:layout_marginTop="6dp"
+                android:text="@string/interval_note" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/openLimits"
+            style="@style/SecondaryButton"
+            android:text="@string/open_limits" />
+
+        <TextView
+            android:id="@+id/footer"
+            style="@style/Muted"
+            android:layout_marginTop="16dp"
+            android:gravity="center" />
+    </LinearLayout>
+</ScrollView>

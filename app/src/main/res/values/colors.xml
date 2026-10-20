@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#2F5BEA</color>
+    <color name="primary_dark">#1F3FAE</color>
+    <color name="primary_soft">#E9EEFE</color>
+
+    <color name="window_bg">#F4F6FB</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="border">#E1E6EF</color>
+    <color name="text">#1D2433</color>
+    <color name="text_muted">#5B6475</color>
+
+    <color name="ok">#137A43</color>
+    <color name="ok_soft">#E3F5EA</color>
+    <color name="warn">#9A6200</color>
+    <color name="warn_soft">#FFF3D6</color>
+    <color name="bad">#B42318</color>
+    <color name="bad_soft">#FDE8E6</color>
+    <color name="info">#1D5FA8</color>
+    <color name="info_soft">#E5F0FB</color>
+</resources>

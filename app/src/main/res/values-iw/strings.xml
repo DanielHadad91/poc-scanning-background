@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">POC Scanning Background</string>
+    <string name="history_title">היסטוריית ריצות</string>
+    <string name="limits_title">מגבלות רקע</string>
+
+    <!-- Language -->
+    <string name="language_button">שפה</string>
+    <string name="language_title">בחירת שפה</string>
+    <string name="lang_system">ברירת מחדל (מערכת)</string>
+    <string name="lang_hebrew">עברית</string>
+    <string name="lang_english">English</string>
+
+    <!-- Background-limits guide -->
+    <string name="open_limits">מגבלות רקע לפי גרסה ויצרן</string>
+    <string name="guide_intro">מסך זה מרכז את מגבלות הרקע: מה כל רכיב במימוש שלנו יכול לעשות, מה משתנה בכל גרסת Android, ומה כל יצרן חוסם. היכן שצריך, יש כפתורים שפותחים את מסך ההגדרות המתאים.</string>
+    <string name="section_schedule_state">מצב התזמון הנוכחי</string>
+    <string name="section_components">המימוש שלנו: רכיבים</string>
+    <string name="section_versions">מגבלות לפי גרסת Android</string>
+    <string name="section_frequency">תדירות ריצה ועיכוב</string>
+    <string name="section_screen_off">מסך כבוי: היכן זה משפיע</string>
+    <string name="section_manufacturers">מגבלות לפי יצרן (Don\'t kill my app)</string>
+    <string name="section_quick_actions">קיצורי דרך להגדרות</string>
+    <string name="section_glossary">מילון מונחים</string>
+    <string name="guide_steps_header">כך מפעילים:</string>
+    <string name="guide_step">%1$d. %2$s</string>
+    <string name="toast_no_settings">לא נמצא מסך הגדרות מתאים במכשיר</string>
+
+    <string name="state_title">האם התזמון שורד ומתחדש</string>
+    <string name="state_origin">מקור התזמון הנוכחי: %1$s</string>
+    <string name="state_next_run">הריצה הבאה מתוזמנת ל-%1$s</string>
+    <string name="state_not_scheduled">כרגע אין תזמון פעיל</string>
+    <string name="state_mechanism">מנגנון: %1$s</string>
+    <string name="state_selfheal">בכל פתיחה האפליקציה בודקת אם התזמון קיים, ואם לא, יוצרת אותו מחדש ומסמנת זאת. אחרי הדלקת המכשיר ה-BootReceiver יוצר מחדש. ריצה שנכשלה עדיין מתזמנת את הבאה. אין שומר רקע רציף: אם המערכת עוצרת את התזמון בזמן שהאפליקציה סגורה וללא הדלקה, הוא יתחדש רק בפתיחה הבאה.</string>
+
+    <!-- Schedule origin -->
+    <string name="origin_none">לא נקבע עדיין</string>
+    <string name="origin_first_open">נוצר בפתיחה הראשונה</string>
+    <string name="origin_continued">המשך אוטומטי אחרי הריצה הקודמת (מצב תקין)</string>
+    <string name="origin_after_boot">נוצר מחדש אחרי הדלקת המכשיר</string>
+    <string name="origin_interval">עודכן אחרי שינוי מרווח</string>
+    <string name="origin_recreated">נוצר מחדש בכניסה לאפליקציה: התזמון הקודם לא נמצא, כנראה נעצר על ידי המערכת או force stop</string>
+    <string name="origin_existing">תזמון קיים, המשיך לרוץ ברקע</string>
+    <string name="next_origin">מקור: %1$s</string>
+    <string name="missed_runs">ריצות שהוחמצו: %1$d (באיחור מעבר למקסימום הצפוי בגרסה זו, כ-%2$d דק\')</string>
+    <string name="missed_none">ריצות שהוחמצו: 0 — בזמן</string>
+
+    <!-- Status banner -->
+    <string name="banner_no_runs">עוד לא הייתה ריצה. התזמון פעיל, ואפשר גם ללחוץ על הרץ עכשיו</string>
+    <string name="banner_ok">הריצה האחרונה הצליחה</string>
+    <string name="banner_ok_with_failures">הריצה האחרונה הצליחה, אבל היו %1$d כשלים ב-24 השעות האחרונות. הפרטים בהיסטוריה</string>
+    <string name="banner_service_limit">הריצה האחרונה: השרת נגמר. %1$s</string>
+    <string name="banner_failed">הריצה האחרונה נכשלה. %1$s</string>
+    <string name="banner_schedule_failed">התזמון נכשל, ולכן לא תהיה ריצה ברקע. %1$s</string>
+
+    <!-- Next run -->
+    <string name="section_next_run">הריצה הבאה</string>
+    <string name="next_countdown">בעוד %1$s</string>
+    <string name="next_confirmed">התזמון מאושר: כל %1$d דקות דרך %2$s. ירוץ גם כשהאפליקציה סגורה ואחרי הדלקה מחדש</string>
+    <string name="next_range">טווח צפוי: %1$s עד %2$s</string>
+    <string name="limit_exact">הזמן מדויק: ההרצה תתחיל בשעה שנקבעה</string>
+    <string name="limit_exact_doze">הזמן מדויק, אך במצב שינה (Doze) ההרצה תידחה לחלון התחזוקה הבא</string>
+    <string name="limit_inexact_doze">הזמן הוא \"לא לפני\": ההרצה עשויה להתעכב, ובמצב שינה (Doze) תידחה לחלון התחזוקה</string>
+    <string name="limit_job_near">הזמן הוא \"לא לפני\": ההרצה עשויה להתעכב דקות ספורות</string>
+    <string name="limit_job_doze">הזמן הוא \"לא לפני\": בדרך כלל ההרצה קרובה לזמן, אך במצב שינה (Doze) תידחה לחלון התחזוקה הבא</string>
+    <string name="limit_job_batched">הזמן הוא \"לא לפני\": מ-Android 15 המערכת מקבצת משימות רקע שצורכות רשת, כך שההרצה עשויה להתעכב עד %1$d דקות, וכשהמסך דלוק להמתין עד שהמסך ייכבה</string>
+    <string name="next_overdue">הזמן עבר. הריצה ממתינה לרשת או לחלון שהמערכת נותנת</string>
+    <string name="next_not_scheduled">לא מתוזמן. אפשר ללחוץ על החל ותזמן בהגדרות</string>
+    <string name="next_no_time">--:--:--</string>
+    <string name="run_now">הרץ עכשיו</string>
+
+    <!-- Last run -->
+    <string name="section_last_run">הריצה האחרונה</string>
+    <string name="no_runs_yet">עוד לא הייתה ריצה</string>
+    <string name="run_title">%1$s · %2$s</string>
+    <string name="run_when">רצה ב-%1$s (לפני %2$s), נמשכה %3$s</string>
+    <string name="run_apps">נסרקו %1$d אפליקציות</string>
+    <string name="run_partial">אין QAP, הרשימה חלקית</string>
+    <string name="run_via">דרך %1$s</string>
+    <string name="detail_label">פירוט: %1$s</string>
+
+    <!-- Successful runs -->
+    <string name="section_successful_runs">ריצות שהצליחו</string>
+    <string name="successful_row">%1$s · נמשכה %2$s · %3$d אפליקציות</string>
+    <string name="no_successful_runs">עוד אין ריצות שהצליחו</string>
+    <string name="view_history">כל ההיסטוריה (%1$d רשומות)</string>
+    <string name="clear_history">איפוס / מחיקת היסטוריית הריצות</string>
+    <string name="clear_history_title">למחוק את היסטוריית הריצות?</string>
+    <string name="clear_history_message">פעולה זו מוחקת את כל הריצות שנרשמו ואת ספירת ההצלחות / הכשלים / ההדלקות, כדי שאפשר יהיה לבדוק מאפס. התזמון וההגדרות נשמרים. אי אפשר לבטל.</string>
+    <string name="clear_history_confirm">מחק</string>
+    <string name="btn_cancel">ביטול</string>
+    <string name="toast_history_cleared">היסטוריית הריצות נמחקה</string>
+
+    <!-- Settings -->
+    <string name="section_settings">הגדרות</string>
+    <string name="label_server">שרת הבדיקות</string>
+    <string name="server_url_hint">https://webhook.site/…</string>
+    <string name="server_hint">כברירת מחדל מוגדרת כתובת בדיקה פעילה, כך שהאפליקציה שולחת מיד. לחץ על \"צור לינק חדש\" כדי לקבל כתובת חדשה עם מכסה משלה — היא נשמרת אוטומטית, ללא צורך ללחוץ שמור URL. בשימוש רק הכתובת האחרונה; עם חידוש אוטומטי, האפליקציה יוצרת חדשה לבד כשהנוכחית נגמרת.</string>
+    <string name="save_url">שמור URL</string>
+    <string name="view_received">צפה במידע שהתקבל</string>
+    <string name="auto_renew_label">חידוש אוטומטי של הלינק כשהוא נגמר</string>
+    <string name="label_interval">כל כמה דקות לסרוק</string>
+
+    <!-- Server URL -->
+    <string name="btn_create_fresh">צור לינק חדש</string>
+    <string name="toast_set_url_first">הגדר קודם כתובת שרת (לחץ על \"צור לינק חדש\")</string>
+    <string name="toast_creating_link">יוצר לינק חדש…</string>
+    <string name="toast_link_created">נוצר לינק חדש ונשמר</string>
+    <string name="toast_link_failed">לא ניתן ליצור לינק (בדוק חיבור)</string>
+    <string name="minutes_hint">דקות</string>
+    <string name="apply_interval">החל ותזמן</string>
+    <string name="interval_note">אין מינימום קבוע: המשימות החד-פעמיות שבהן אנו משתמשים מאפשרות כל מרווח, ולכן שום ערך לא נחסם. המערכת עדיין מגבילה את התדירות בפועל (דליי Standby, ‏Doze) — ראה במדריך.</string>
+
+    <!-- Footer -->
+    <string name="footer_qap_granted">הרשאת QAP ניתנה: רואים את כל האפליקציות</string>
+    <string name="footer_qap_missing">הרשאת QAP לא ניתנה: מ-API 30 הרשימה חלקית</string>
+    <string name="footer_mechanism">מנגנון התזמון: %1$s · Android %2$s (API %3$d)</string>
+    <string name="footer_storage">כל הריצות נשמרות מקומית במכשיר</string>
+
+    <!-- Toasts -->
+    <string name="toast_run_enqueued">הריצה התחילה ברקע</string>
+    <string name="toast_run_refused">המערכת סירבה להריץ עכשיו</string>
+    <string name="toast_url_saved">ה-URL נשמר. הריצה הבאה תשלח אליו</string>
+    <string name="toast_url_invalid">ה-URL צריך להתחיל ב-https:// או ב-http://</string>
+    <string name="toast_interval_invalid">צריך מספר דקות, 1 או יותר</string>
+    <string name="toast_schedule_confirmed">התזמון אושר. הריצה הבאה ב-%1$s</string>
+    <string name="toast_schedule_failed">התזמון נכשל. הפרטים במסך</string>
+    <string name="toast_no_browser">לא נמצא דפדפן לפתיחת הקישור</string>
+
+    <!-- Labels -->
+    <string name="outcome_succeeded">הצליח</string>
+    <string name="outcome_service_limit">השרת נגמר</string>
+    <string name="outcome_failed">נכשל</string>
+    <string name="trigger_scheduled">מתוזמנת</string>
+    <string name="trigger_manual">ידנית</string>
+
+    <!-- Run status explanations -->
+    <string name="status_success">הסריקה והשליחה הצליחו.</string>
+    <string name="status_server_limit_reached">הסריקה הצליחה, אבל השרת דחה את הבקשה: ה-URL החינמי הגיע למגבלת הבקשות (כ-50). צריך URL חדש.</string>
+    <string name="status_server_url_expired">הסריקה הצליחה, אבל ה-URL לא נמצא: URL חינמי נמחק 7 ימים אחרי שנוצר, או שהכתובת שגויה. צריך URL חדש.</string>
+    <string name="status_payload_too_large">הסריקה הצליחה, אבל הבקשה גדולה מ-10 MB, המגבלה של webhook.site.</string>
+    <string name="status_server_not_set">הסריקה הצליחה, אבל לא הוגדרה כתובת שרת. לחץ על \"מידע\" ליד שדה השרת כדי ליצור אחת.</string>
+    <string name="status_server_error">הסריקה הצליחה, אבל השרת החזיר שגיאה.</string>
+    <string name="status_no_network">הסריקה הצליחה, אבל אין חיבור לרשת, ולכן לא נשלח כלום.</string>
+    <string name="status_network_error">הסריקה הצליחה, אבל השליחה לא הגיעה לשרת: רשת, TLS או כתובת לא תקינה.</string>
+    <string name="status_scan_failed">הסריקה עצמה נכשלה, ולכן לא נשלח כלום.</string>
+
+    <!-- History rows -->
+    <string name="history_summary">רשומות: %1$d · הצליחו: %2$d · נכשלו: %3$d · הדלקות: %4$d</string>
+    <string name="history_empty">עוד אין רשומות</string>
+    <string name="row_scan_title">%1$s · %2$s · %3$s</string>
+    <string name="row_boot_title">הדלקת מכשיר · %1$s</string>
+    <string name="row_schedule_title">תזמון · %1$s</string>
+    <string name="row_schedule_failed_title">תזמון נכשל · %1$s</string>
+    <string name="row_next_run">הריצה הבאה: %1$s</string>
+
+    <!-- Messages written into the local history -->
+    <string name="log_boot">המכשיר הודלק. האפליקציה התעוררה בלי שנפתחה</string>
+    <string name="log_schedule_first">תוזמן בפתיחה הראשונה</string>
+    <string name="log_schedule_interval">התזמון שונה לכל %1$d דקות</string>
+    <string name="log_schedule_after_boot">תוזמן מחדש אחרי הדלקת המכשיר</string>
+    <string name="log_schedule_recreated">נוצר מחדש בכניסה לאפליקציה: התזמון הקודם לא נמצא</string>
+    <string name="log_schedule_failed">המערכת סירבה לתזמן (%1$s)</string>
+    <string name="log_schedule_after_run_failed">לא הצליח לתזמן את הריצה הבאה</string>
+
+    <!-- Durations -->
+    <string name="duration_ms">%1$d מ״ש</string>
+    <string name="duration_seconds">%1$s שניות</string>
+    <string name="ago_seconds">%1$d שניות</string>
+    <string name="ago_minutes">%1$d דקות</string>
+    <string name="ago_hours">%1$d שעות</string>
+    <string name="ago_days">%1$d ימים</string>
+</resources>
