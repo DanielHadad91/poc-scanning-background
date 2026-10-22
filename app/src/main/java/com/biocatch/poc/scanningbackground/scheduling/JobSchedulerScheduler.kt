@@ -34,6 +34,34 @@ import com.biocatch.poc.scanningbackground.services.ScanJobService
  *   calendar apps.
  * - In Doze, Android rate-limits allow-while-idle alarms (the Doze docs give about once per 9
  *   minutes per app).
+ *
+ * Alternative, not used: a periodic job, where the system owns the cycle instead of each run arming
+ * the next one-shot job. The SCHEDULED branch would become:
+ *
+ * ```
+ * builder
+ *     .setPeriodic(delayMillis)
+ *     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+ *     .setPersisted(true)
+ * ```
+ *
+ * Compared with the one-shot job used here:
+ * - The cycle cannot break. [ScanJobService] arms the next run after jobFinished, so a process killed
+ *   between the two leaves nothing scheduled until the app is opened again. A periodic job stays
+ *   scheduled across runs, process death and, when persisted, reboot.
+ * - Retries are kept. A run stopped by the system (onStopJob returning true) or finished with
+ *   jobFinished(params, true) is retried with backoff and then returns to its period. With one-shot
+ *   jobs that retry is replaced when the run arms the next interval under the same job id.
+ * - Offline is the same: the run waits for network, and periods missed while offline are not
+ *   accumulated, so one run happens when the network returns.
+ * - Limits: from API 24 the period is at least 15 minutes ([SchedulingLimits.PERIODIC_MIN_MINUTES]);
+ *   shorter values are raised silently. With setPeriodic(interval) the run may fall anywhere in the
+ *   period; setPeriodic(interval, flex) narrows it to the last flex part (at least 5 minutes). It
+ *   cannot be combined with setMinimumLatency or setOverrideDeadline. One-shot jobs have no minimum
+ *   interval, which is why they are used here.
+ * - Switching also needs [ScanJobService] to stop calling ScanScheduling.armNextScheduledRun, since
+ *   scheduling the same job id again restarts the period on every run, and SettingsStore.nextRunAt
+ *   becomes an estimate, because the system picks the time inside each period.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler {
