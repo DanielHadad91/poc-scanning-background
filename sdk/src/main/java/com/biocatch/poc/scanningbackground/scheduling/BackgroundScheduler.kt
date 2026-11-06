@@ -5,15 +5,21 @@ import android.os.Build
 import com.biocatch.poc.scanningbackground.model.Trigger
 import com.biocatch.poc.scanningbackground.storage.SettingsStore
 
-/** Arms one scan at a time; the run itself arms the next, so any interval in minutes is possible. */
+/** Arms the repeating scan. The system keeps the repeat; a finished run does not schedule the next one. */
 interface BackgroundScheduler {
 
     val name: String
 
     fun isScheduled(): Boolean
 
-    /** Arms a single [trigger] run [delayMillis] from now. Returns false if the system refused it. */
-    fun schedule(trigger: Trigger, delayMillis: Long): Boolean
+    /**
+     * Arms [trigger]. A scheduled trigger repeats every [periodMillis]. On API 19–20 the call is
+     * immediate and [initialDelayMillis] is added to now as the first-fire time. That delivery is the
+     * scan. On API 21+ the registration job waits [initialDelayMillis], then registers the periodic job.
+     * After boot that delay is the stored offset counted from the boot. A manual trigger is one run.
+     * Returns false if the system refused it.
+     */
+    fun schedule(trigger: Trigger, initialDelayMillis: Long, periodMillis: Long): Boolean
 
     fun cancelScheduled()
 

@@ -31,12 +31,13 @@
     <string name="state_next_run">הריצה הבאה מתוזמנת ל-%1$s</string>
     <string name="state_not_scheduled">כרגע אין תזמון פעיל</string>
     <string name="state_mechanism">מנגנון: %1$s</string>
-    <string name="state_selfheal">בכל פתיחה האפליקציה בודקת אם התזמון קיים, ואם לא, יוצרת אותו מחדש ומסמנת זאת. אחרי הדלקת המכשיר ה-BootReceiver יוצר מחדש. ריצה שנכשלה עדיין מתזמנת את הבאה. אין שומר רקע רציף: אם המערכת עוצרת את התזמון בזמן שהאפליקציה סגורה וללא הדלקה, הוא יתחדש רק בפתיחה הבאה.</string>
+    <string name="state_selfheal">בכל פתיחה האפליקציה בודקת אם התזמון קיים, ואם לא, יוצרת אותו מחדש ומסמנת זאת. אחרי הדלקת המכשיר, ב-API 19–20 קוראים ל-setInexactRepeating בהדלקה ומעבירים את ההיסט השמור כזמן הירי הראשון. ב-API 21+ ממתינים את ההיסט ואז רושמים את העבודה המחזורית. מקלט ההדלקה לא סורק. ריצה שהסתיימה לא מתזמנת את הבאה: setPeriodic ו-setInexactRepeating חוזרים. אין שומר רקע רציף: אם המערכת עוצרת את התזמון בזמן שהאפליקציה סגורה וללא הדלקה, הוא יתחדש רק בפתיחה הבאה.</string>
+    <string name="log_host_boot">מקלט ההדלקה של האפליקציה רץ. הוא לא תזמן.</string>
 
     <!-- Schedule origin -->
     <string name="origin_none">לא נקבע עדיין</string>
     <string name="origin_first_open">נוצר בפתיחה הראשונה</string>
-    <string name="origin_continued">המשך אוטומטי אחרי הריצה הקודמת (מצב תקין)</string>
+    <string name="origin_continued">החזרה של המערכת עדיין רשומה</string>
     <string name="origin_after_boot">נוצר מחדש אחרי הדלקת המכשיר</string>
     <string name="origin_interval">עודכן אחרי שינוי מרווח</string>
     <string name="origin_recreated">נוצר מחדש בכניסה לאפליקציה: התזמון הקודם לא נמצא, כנראה נעצר על ידי המערכת או force stop</string>
@@ -73,9 +74,9 @@
     <!-- Next run -->
     <string name="section_next_run">הריצה הבאה</string>
     <string name="next_countdown">בעוד %1$s</string>
-    <string name="next_confirmed">התזמון מאושר: כל %1$d דקות דרך %2$s. ירוץ גם כשהאפליקציה סגורה ואחרי הדלקה מחדש</string>
+    <string name="next_confirmed">התזמון מאושר: %1$d ריצות ב-24 שעות דרך %2$s. ירוץ גם כשהאפליקציה סגורה ואחרי הדלקה מחדש</string>
     <string name="next_range">טווח רגיל: %1$s עד %2$s</string>
-    <string name="limit_exact">הזמן מדויק: ההרצה תתחיל בשעה שנקבעה</string>
+    <string name="limit_inexact">חזרה לא מדויקת: ההרצה יכולה ליפול בכל מקום בתוך המרווח</string>
     <string name="limit_exact_doze">הזמן מדויק, אך במצב שינה (Doze) ההרצה תידחה לחלון התחזוקה הבא</string>
     <string name="limit_inexact_doze">הזמן הוא \"לא לפני\": ההרצה עשויה להתעכב, ובמצב שינה (Doze) תידחה לחלון התחזוקה</string>
     <string name="limit_job_near">הזמן הוא \"לא לפני\": ההרצה עשויה להתעכב דקות ספורות</string>
@@ -112,11 +113,11 @@
     <string name="section_settings">הגדרות</string>
     <string name="label_server">שרת הבדיקות</string>
     <string name="server_url_hint">https://webhook.site/…</string>
-    <string name="server_hint">כברירת מחדל מוגדרת כתובת בדיקה פעילה, כך שהאפליקציה שולחת מיד. לחץ על \"צור לינק חדש\" כדי לקבל כתובת חדשה עם מכסה משלה — היא נשמרת אוטומטית, ללא צורך ללחוץ שמור URL. בשימוש רק הכתובת האחרונה; עם חידוש אוטומטי, האפליקציה יוצרת חדשה לבד כשהנוכחית נגמרת.</string>
+    <string name="server_hint">הסריקה לא רצה עד שנשמרת כתובת HTTP או HTTPS. לחץ על \"צור לינק חדש\" כדי לקבל כתובת עם מכסה משלה — היא נשמרת אוטומטית. בשימוש רק הכתובת האחרונה; עם חידוש אוטומטי, האפליקציה יוצרת חדשה לבד כשהנוכחית נגמרת.</string>
     <string name="save_url">שמור URL</string>
     <string name="view_received">צפה במידע שהתקבל</string>
     <string name="auto_renew_label">חידוש אוטומטי של הלינק כשהוא נגמר</string>
-    <string name="label_interval">כל כמה דקות לסרוק</string>
+    <string name="label_interval">סריקות ב-24 שעות (1, 2 או 3)</string>
 
     <!-- Server URL -->
     <string name="btn_create_fresh">צור לינק חדש</string>
@@ -124,9 +125,9 @@
     <string name="toast_creating_link">יוצר לינק חדש…</string>
     <string name="toast_link_created">נוצר לינק חדש ונשמר</string>
     <string name="toast_link_failed">לא ניתן ליצור לינק (בדוק חיבור)</string>
-    <string name="minutes_hint">דקות</string>
+    <string name="minutes_hint">1–3</string>
     <string name="apply_interval">החל ותזמן</string>
-    <string name="interval_note">אין מינימום קבוע: המשימות החד-פעמיות שבהן אנו משתמשים מאפשרות כל מרווח, ולכן שום ערך לא נחסם. המערכת עדיין מגבילה את התדירות בפועל (דליי Standby, ‏Doze) — ראה במדריך.</string>
+    <string name="interval_note">מ-API 21 נעשה שימוש במשימה מחזורית. מ-API 24 המחזור לא יכול להיות קצר מ-15 דקות. ב-API 19–20 נעשה שימוש בהתראה חוזרת לא מדויקת, בלי רצפה כזו. 1, 2 או 3 ריצות ב-24 שעות הן מרווח של 24, 12 או 8 שעות, כך שרצפת 15 הדקות לא משנה את התזמון הזה.</string>
 
     <!-- Footer -->
     <string name="footer_qap_granted">הרשאת QAP ניתנה: רואים את כל האפליקציות</string>
@@ -139,7 +140,7 @@
     <string name="toast_run_refused">המערכת סירבה להריץ עכשיו</string>
     <string name="toast_url_saved">ה-URL נשמר. הריצה הבאה תשלח אליו</string>
     <string name="toast_url_invalid">ה-URL צריך להתחיל ב-https:// או ב-http://</string>
-    <string name="toast_interval_invalid">צריך מספר דקות, 1 או יותר</string>
+    <string name="toast_interval_invalid">יש להזין 1, 2 או 3</string>
     <string name="toast_schedule_confirmed">התזמון אושר. הריצה הבאה ב-%1$s</string>
     <string name="toast_schedule_failed">התזמון נכשל. הפרטים במסך</string>
     <string name="toast_no_browser">לא נמצא דפדפן לפתיחת הקישור</string>
@@ -172,7 +173,7 @@
     <string name="row_next_run">הריצה הבאה: %1$s</string>
 
     <!-- Messages written into the local history -->
-    <string name="log_schedule_interval">התזמון שונה לכל %1$d דקות</string>
+    <string name="log_schedule_interval">התזמון הוחלף: %1$d ריצות ב-24 שעות</string>
 
     <!-- Durations -->
     <string name="duration_ms">%1$d מ״ש</string>

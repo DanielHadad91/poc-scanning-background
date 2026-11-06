@@ -7,8 +7,8 @@ import android.os.Build
  * the earliest a run may start; this describes how late it may actually run and why.
  */
 enum class TimingLimit {
-    /** AlarmManager setExact on API 19-22: fires at the set time; these versions have no Doze. */
-    EXACT,
+    /** AlarmManager setInexactRepeating on API 19-22: the repeat can drift; these versions have no Doze. */
+    INEXACT,
 
     /** AlarmManager setExact on API 23-30: exact while awake, deferred to a maintenance window in Doze. */
     EXACT_DEFERRED_IN_DOZE,
@@ -36,9 +36,9 @@ object SchedulingLimits {
     const val CONNECTIVITY_BATCH_MAX_DELAY_MINUTES = 31L
 
     /**
-     * The minimum interval Android enforces. It is 15 minutes only for PERIODIC jobs
-     * (JobInfo.getMinPeriodMillis / WorkManager PeriodicWorkRequest). We use one-time, self-rescheduling
-     * jobs, which have no such minimum, so the app imposes no per-version floor and never blocks a value.
+     * The minimum period Android enforces for a periodic JobScheduler job from API 24
+     * (JobInfo.getMinPeriodMillis). A shorter period is raised to this. setInexactRepeating has no
+     * matching floor. Three runs in 24 hours is an 8-hour gap, so this floor does not shorten that schedule.
      */
     const val PERIODIC_MIN_MINUTES = 15
 
@@ -56,8 +56,7 @@ object SchedulingLimits {
     fun forScheduler(schedulerName: String, sdkInt: Int): TimingLimit =
         if (schedulerName == AlarmScheduler.NAME) {
             when {
-                sdkInt < Build.VERSION_CODES.M -> TimingLimit.EXACT
-                sdkInt < Build.VERSION_CODES.S -> TimingLimit.EXACT_DEFERRED_IN_DOZE
+                sdkInt < Build.VERSION_CODES.M -> TimingLimit.INEXACT
                 else -> TimingLimit.INEXACT_DEFERRED_IN_DOZE
             }
         } else {

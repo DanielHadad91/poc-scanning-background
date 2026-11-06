@@ -72,7 +72,7 @@ class EntryFormatter(private val context: Context) {
     }
 
     fun timingLimitText(limit: TimingLimit): String = when (limit) {
-        TimingLimit.EXACT -> context.getString(R.string.limit_exact)
+        TimingLimit.INEXACT -> context.getString(R.string.limit_inexact)
         TimingLimit.EXACT_DEFERRED_IN_DOZE -> context.getString(R.string.limit_exact_doze)
         TimingLimit.INEXACT_DEFERRED_IN_DOZE -> context.getString(R.string.limit_inexact_doze)
         TimingLimit.JOB_NEAR_TIME -> context.getString(R.string.limit_job_near)

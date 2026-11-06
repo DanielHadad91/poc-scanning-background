@@ -6,27 +6,41 @@ import android.app.job.JobService
 import android.os.Build
 import com.biocatch.poc.scanningbackground.model.Trigger
 import com.biocatch.poc.scanningbackground.scheduling.JobSchedulerScheduler
-import com.biocatch.poc.scanningbackground.scheduling.ScanScheduling
 import kotlin.concurrent.thread
 
-/** API 21+. Started by the system, also when the app is closed, so it never relies on the screen. */
+/**
+ * API 21+. Started by the system, also when the app is closed, so it never relies on the screen.
+ * The periodic job repeats by itself. A finished scan does not register the next run.
+ * A registration job only calls setPeriodic once and does not scan.
+ */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class ScanJobService : JobService() {
 
     override fun onStartJob(params: JobParameters): Boolean {
         val trigger = params.extras.getString(EXTRA_TRIGGER)?.let(Trigger::valueOf) ?: Trigger.SCHEDULED
+        if (trigger == Trigger.REGISTER) {
+            thread(name = "register-job") {
+                val retry = !JobSchedulerScheduler(applicationContext).registerPeriodic()
+                jobFinished(params, retry)
+            }
+            return true
+        }
         thread(name = "scan-job") {
             ScanRunner(applicationContext).run(trigger, JobSchedulerScheduler.NAME)
-            // Finish first: scheduling the same job id while it is still running would stop it.
+            // Scheduling job 1001 again would restart the period. setPeriodic already repeats.
             jobFinished(params, false)
-            if (trigger == Trigger.SCHEDULED) ScanScheduling.armNextScheduledRun(applicationContext)
         }
         return true
     }
 
     /** A scheduled run stopped by the system is retried; a manual one is not. */
-    override fun onStopJob(params: JobParameters): Boolean =
-        params.extras.getString(EXTRA_TRIGGER) != Trigger.MANUAL.name
+    override fun onStopJob(params: JobParameters): Boolean {
+        val trigger = params.extras.getString(EXTRA_TRIGGER)
+        if (trigger == Trigger.MANUAL.name) return false
+        // Retry the registration only when the periodic job was not registered yet.
+        if (trigger == Trigger.REGISTER.name) return !JobSchedulerScheduler(this).hasPeriodicJob()
+        return true
+    }
 
     companion object {
         const val EXTRA_TRIGGER = "trigger"

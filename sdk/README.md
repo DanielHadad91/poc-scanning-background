@@ -1,7 +1,7 @@
 # Scanning SDK — integration guide
 
 The `:sdk` module contains all the background logic — scanning installed apps, uploading the report,
-self-rescheduling, and boot recovery. It has **no GUI, no Activity, and no manifest entries of its own**.
+the system repeat, and boot recovery. It has **no GUI, no Activity, and no manifest entries of its own**.
 An integrating app ships its own UI and wires the SDK through two things only: its **own manifest** and a
 **single call** to `ScanningSdk`.
 
@@ -78,33 +78,30 @@ Use the SDK's **fully-qualified class names** (do not use leading-dot relative n
 ## 3. Start it from code (one call)
 
 ```kotlin
-import com.biocatch.poc.scanningbackground.sdk.ScanConfig
 import com.biocatch.poc.scanningbackground.sdk.ScanningSdk
 
 // e.g. in Application.onCreate() or your launcher Activity.onCreate()
-ScanningSdk.initialize(
+ScanningSdk.scanSchedule(
     context,
-    ScanConfig(
-        serverUrl = "https://your-endpoint.example/collect",
-        intervalMinutes = 60,
-        autoRenew = true,
-    ),
+    intervals = 1,
+    backendDetectionUrl = "https://your-endpoint.example/collect",
 )
 ```
 
-That is the entire integration. From here the SDK scans, uploads, records each run, re-arms the next run,
-and recovers after a reboot — all with no UI.
+That is the entire integration. From here the SDK scans, uploads, records each run, and repeats.
+The 24-hour window starts at the `scanSchedule` call that chose the offset. The offset is a position inside the period, counted from that call. API 19–20 calls `setInexactRepeating` at that call and passes the call plus the offset as the first fire. That delivery is the scan. API 21+ waits that same offset, then registers the periodic job. After boot, API 19–20 makes the same call at the boot and passes the boot plus the stored offset as the first fire. API 21+ waits that offset, then registers the periodic job. This stays off when `cancelScanSchedule` was called. The boot receiver does not scan, and a finished run does not register the next one. `setPeriodic` and `setInexactRepeating` own the repeat.
 
 ## Public API (`com.biocatch.poc.scanningbackground.sdk.ScanningSdk`)
 
 | Method | Purpose |
 | --- | --- |
-| `initialize(context, config?)` | Apply optional config, then arm the schedule if nothing is armed. Call once on start. |
-| `start(context)` | Arm the schedule if nothing is armed (idempotent). |
-| `stop(context)` | Cancel the armed run (revives on next `start`/boot). |
+| `scanSchedule(context, intervals, backendDetectionUrl?)` | Arm 1, 2, or 3 runs in 24 hours. The same count leaves the registration. A different count replaces it. A blank or non-http URL returns without changing the registration, and the scan does not run. |
+| `cancelScanSchedule(context)` | Remove the repeat. Boot does not arm it again until `scanSchedule`. |
+| `start(context)` | Re-applies a stored schedule. Does nothing after `cancelScanSchedule`. |
+| `initialize(context, config?)` | Optional `ScanConfig`, then `scanSchedule`. |
 | `runNow(context): Boolean` | Run one scan now, off-cycle. |
-| `reschedule(context, reason): LogEntry` | Re-arm with the current interval. |
-| `setServerUrl` / `setIntervalMinutes` / `setAutoRenew` | Update settings. |
+| `reschedule(context, reason): LogEntry` | Re-arm with the stored count. |
+| `setServerUrl` / `setAutoRenew` | Update settings. A URL alone does not arm the scan. |
 | `history(context): List<LogEntry>` | Recorded runs, newest first. |
 | `clearHistory(context)` | Clear the history and reset the missed-runs count to start from now. |
 | `missedRuns(context, now?): MissedRunsSummary` | Total scheduled runs missed over the whole history (every gap longer than this Android version's tolerance, plus the open one), the number of such gaps, and the longest gap. |

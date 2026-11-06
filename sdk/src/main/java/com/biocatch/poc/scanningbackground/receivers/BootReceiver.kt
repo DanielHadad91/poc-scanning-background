@@ -10,10 +10,15 @@ import com.biocatch.poc.scanningbackground.model.ScheduleOrigin
 import com.biocatch.poc.scanningbackground.scheduling.BackgroundScheduler
 import com.biocatch.poc.scanningbackground.scheduling.ScanScheduling
 import com.biocatch.poc.scanningbackground.storage.RunStore
+import com.biocatch.poc.scanningbackground.storage.SettingsStore
 
 /**
- * Wakes the app after a reboot without the user opening it, records the boot, and re-arms the
- * schedule. Android delivers BOOT_COMPLETED only to an app opened at least once and not force-stopped.
+ * Wakes the app after a reboot without the user opening it and records the boot. A schedule that
+ * was not cancelled is armed again. API 19–20 calls setInexactRepeating at the boot and passes the
+ * stored offset as the first fire. That delivery is the scan. API 21+ waits that offset, then registers
+ * the periodic job. This receiver does not scan. A cancelled
+ * schedule stays off. Android delivers BOOT_COMPLETED only to an app opened at least once and
+ * not force-stopped.
  */
 class BootReceiver : BroadcastReceiver() {
 
@@ -29,8 +34,24 @@ class BootReceiver : BroadcastReceiver() {
                 message = appContext.getString(R.string.log_boot),
             )
         )
-        // JobScheduler restores a persisted job by itself, but AlarmManager loses alarms on reboot;
-        // re-arming in both cases gives one clear "next run" measured from the boot.
-        ScanScheduling.reschedule(appContext, appContext.getString(R.string.log_schedule_after_boot), ScheduleOrigin.AFTER_BOOT)
+        if (SettingsStore(appContext).scheduleCancelled) {
+            RunStore(appContext).append(
+                LogEntry(
+                    kind = EntryKind.SCHEDULE,
+                    timestamp = System.currentTimeMillis(),
+                    scheduler = BackgroundScheduler.from(appContext).name,
+                    message = appContext.getString(R.string.log_boot_cancelled),
+                )
+            )
+            return
+        }
+        // Alarms are dropped on reboot. A persisted job can return on its previous period, so this
+        // replaces it. API 19–20 calls setInexactRepeating at the boot and passes the stored offset as
+        // the first fire. API 21+ waits that offset, then registers the periodic job. This does not scan.
+        ScanScheduling.reschedule(
+            appContext,
+            appContext.getString(R.string.log_schedule_after_boot),
+            ScheduleOrigin.AFTER_BOOT,
+        )
     }
 }

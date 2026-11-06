@@ -10,6 +10,7 @@ import com.biocatch.poc.scanningbackground.scheduling.BackgroundScheduler
 import com.biocatch.poc.scanningbackground.scheduling.MissedRuns
 import com.biocatch.poc.scanningbackground.scheduling.MissedRunsSummary
 import com.biocatch.poc.scanningbackground.scheduling.ScanScheduling
+import com.biocatch.poc.scanningbackground.scheduling.ScanWindow
 import com.biocatch.poc.scanningbackground.scheduling.SchedulingLimits
 import com.biocatch.poc.scanningbackground.storage.RunStore
 import com.biocatch.poc.scanningbackground.storage.SettingsStore
@@ -17,7 +18,7 @@ import com.biocatch.poc.scanningbackground.storage.SettingsStore
 /** Optional configuration applied at [ScanningSdk.initialize]. A null field keeps the current value. */
 data class ScanConfig(
     val serverUrl: String? = null,
-    val intervalMinutes: Int? = null,
+    val intervals: Int? = null,
     val autoRenew: Boolean? = null,
 )
 
@@ -35,39 +36,80 @@ data class ScanState(
 /**
  * The single entry point for an integrating app. The host is responsible only for declaring the
  * SDK components and the permissions in its own AndroidManifest (see README) and calling
- * [initialize] (or [start]) once; everything else — scanning, uploading, self-rescheduling, boot
- * recovery — runs inside the SDK with no UI.
+ * [initialize] (or [scanSchedule]) once; everything else — scanning, uploading, and boot recovery
+ * for the alarm path — runs inside the SDK with no UI.
  */
 object ScanningSdk {
 
-    /** Applies optional [config], then arms the schedule if nothing is armed. Call once on app start. */
+    /**
+     * Applies optional [config], then [scanSchedule]. A null [ScanConfig.intervals] uses the stored
+     * count. Opening the app through [start] does not undo [cancelScanSchedule].
+     */
     fun initialize(context: Context, config: ScanConfig? = null): LogEntry? {
-        config?.let { applyConfig(context, it) }
+        val settings = SettingsStore(context)
+        config?.autoRenew?.let { settings.autoRenew = it }
+        val intervals = config?.intervals ?: settings.intervals
+        if (config == null) return start(context)
+        return scanSchedule(context, intervals, config.serverUrl)
+    }
+
+    /**
+     * Arms 1, 2, or 3 runs inside a hardcoded 24-hour window. A matching registration is left in
+     * place. A different count replaces it and picks a new offset. [backendDetectionUrl] null keeps
+     * the stored URL and leaves an existing registration running. A blank URL, or a URL that is not
+     * http or https, returns without arming, clearing, or scanning. API 19–20 calls setInexactRepeating
+     * at this call. The first-fire time passed in is this call plus the offset, and that delivery is the
+     * scan. API 21+ waits that offset, then registers the periodic job. The 24-hour window starts at the
+     * scanSchedule call that chose the offset. After boot, API 19–20 makes the same call at the boot and
+     * passes the boot plus the stored offset as the first fire. API 21+ waits that offset, then registers
+     * the periodic job. The boot receiver does not scan.
+     * Returns the schedule entry when it changed the registration, or null when it left one in place.
+     */
+    fun scanSchedule(context: Context, intervals: Int, backendDetectionUrl: String? = null): LogEntry? {
+        val settings = SettingsStore(context)
+        val url = resolveUrl(settings, backendDetectionUrl) ?: return null
+        if (!ScanWindow.isValid(intervals)) {
+            return record(context, context.getString(R.string.log_schedule_bad_intervals))
+        }
+        if (backendDetectionUrl != null) settings.serverUrl = url
+        settings.intervals = intervals
+        settings.scheduleCancelled = false
         return ScanScheduling.ensureScheduled(context)
     }
 
-    /** Arms the schedule only if nothing is armed (idempotent); does not reset a running timer. */
-    fun start(context: Context): LogEntry? = ScanScheduling.ensureScheduled(context)
+    /**
+     * Re-applies the stored schedule when one is not cancelled. Does nothing after [cancelScanSchedule]
+     * until the host calls [scanSchedule] again.
+     */
+    fun start(context: Context): LogEntry? {
+        val settings = SettingsStore(context)
+        if (settings.scheduleCancelled || !ScanWindow.isValid(settings.intervals)) return null
+        return scanSchedule(context, settings.intervals, null)
+    }
 
-    /** Cancels the armed run. The schedule revives on the next [start] or after a device boot. */
-    fun stop(context: Context) {
+    /**
+     * Removes the periodic job or the repeating alarm and keeps it off across reboot.
+     * A scan that has already started is not aborted. The next [scanSchedule] arms it again.
+     */
+    fun cancelScanSchedule(context: Context) {
         BackgroundScheduler.from(context).cancelScheduled()
-        SettingsStore(context).nextRunAt = 0L
+        val settings = SettingsStore(context)
+        settings.nextRunAt = 0L
+        settings.armedIntervals = 0
+        settings.scheduleCancelled = true
     }
 
     /** Runs one scan now, off-cycle. Returns false if the system refused to enqueue it. */
     fun runNow(context: Context): Boolean = ScanScheduling.runNow(context)
 
     /** Re-arms a run one interval from now with the current interval, recording [reason]. */
-    fun reschedule(context: Context, reason: String): LogEntry =
-        ScanScheduling.reschedule(context, reason, ScheduleOrigin.INTERVAL_CHANGED)
+    fun reschedule(context: Context, reason: String): LogEntry {
+        SettingsStore(context).scheduleCancelled = false
+        return ScanScheduling.reschedule(context, reason, ScheduleOrigin.INTERVAL_CHANGED)
+    }
 
     fun setServerUrl(context: Context, url: String) {
         SettingsStore(context).serverUrl = url
-    }
-
-    fun setIntervalMinutes(context: Context, minutes: Int) {
-        SettingsStore(context).intervalMinutes = minutes
     }
 
     fun setAutoRenew(context: Context, enabled: Boolean) {
@@ -113,10 +155,22 @@ object ScanningSdk {
         )
     }
 
-    private fun applyConfig(context: Context, config: ScanConfig) {
-        val settings = SettingsStore(context)
-        config.serverUrl?.let { settings.serverUrl = it }
-        config.intervalMinutes?.let { settings.intervalMinutes = it }
-        config.autoRenew?.let { settings.autoRenew = it }
+    private fun resolveUrl(settings: SettingsStore, backendDetectionUrl: String?): String? {
+        val candidate = backendDetectionUrl?.trim() ?: return settings.storedServerUrl()?.takeIf(::isHttp)
+        if (candidate.isEmpty() || !isHttp(candidate)) return null
+        return candidate
+    }
+
+    private fun isHttp(url: String): Boolean = url.startsWith("https://") || url.startsWith("http://")
+
+    private fun record(context: Context, message: String): LogEntry {
+        val entry = LogEntry(
+            kind = EntryKind.SCHEDULE,
+            timestamp = System.currentTimeMillis(),
+            scheduler = BackgroundScheduler.from(context).name,
+            message = message,
+        )
+        RunStore(context).append(entry)
+        return entry
     }
 }

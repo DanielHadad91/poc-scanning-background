@@ -43,6 +43,10 @@ class ScanRunner(private val context: Context) {
     private data class RunResult(val status: RunStatus, val detail: String, val report: ScanReport?)
 
     private fun scanAndUpload(startedAt: Long): RunResult {
+        val serverUrl = SettingsStore(context).storedServerUrl()
+        if (serverUrl == null) {
+            return RunResult(RunStatus.SERVER_NOT_SET, "No server URL configured", null)
+        }
         val scanner = InstalledAppsScanner(context)
         val report = try {
             ScanReport(
@@ -58,10 +62,6 @@ class ScanRunner(private val context: Context) {
         }
 
         val settings = SettingsStore(context)
-        val serverUrl = settings.serverUrl
-        if (serverUrl.isBlank()) {
-            return RunResult(RunStatus.SERVER_NOT_SET, "No server URL configured", report)
-        }
         if (!NetworkState.isOnline(context)) {
             return RunResult(RunStatus.NO_NETWORK, "No active network connection", report)
         }

@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="log_boot">המכשיר הודלק. האפליקציה התעוררה בלי שנפתחה</string>
+    <string name="log_boot_cancelled">המכשיר הודלק. התזמון נשאר מבוטל</string>
     <string name="log_schedule_first">תוזמן בפתיחה הראשונה</string>
-    <string name="log_schedule_after_boot">תוזמן מחדש אחרי הדלקת המכשיר</string>
+    <string name="log_schedule_interval">התזמון הוחלף: %1$d ריצות ב-24 שעות</string>
+    <string name="log_schedule_no_url">לא תוזמן. לא שמורה כתובת שרת</string>
+    <string name="log_schedule_bad_intervals">לא תוזמן. intervals חייב להיות 1, 2 או 3</string>
+    <string name="log_schedule_after_boot">תוזמן מחדש אחרי הדלקת המכשיר. ב-API 19–20 האזעקה החוזרת נקראת עכשיו וההיסט השמור הוא זמן הירי הראשון. ב-API 21+ ממתינים את ההיסט ואז רושמים את העבודה המחזורית</string>
     <string name="log_schedule_recreated">נוצר מחדש בכניסה לאפליקציה: התזמון הקודם לא נמצא</string>
     <string name="log_schedule_failed">המערכת סירבה לתזמן (%1$s)</string>
-    <string name="log_schedule_after_run_failed">לא הצליח לתזמן את הריצה הבאה</string>
+    <string name="log_schedule_after_run_failed">התזמון החוזר לא נרשם</string>
 </resources>

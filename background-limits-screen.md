@@ -24,7 +24,7 @@
   - Schedule existed and kept running in the background
 - Next run scheduled for `{date-time}`  — or, when there is none: No active schedule right now
 - Mechanism: `{JobScheduler | AlarmManager}`
-- On every open the app checks whether the schedule exists, and if not, re-creates it and records that. After the device boots, the BootReceiver re-creates it. A failed run still schedules the next one. There is no continuous background watchdog: if the system stops the schedule while the app is closed and there is no boot, it is restored only on the next open.
+- On every open the app checks whether the schedule exists, and if not, re-creates it and records that. After the device boots, API 19–20 calls setInexactRepeating at the boot and passes the stored offset as the first fire. API 21+ waits that offset, then registers the periodic job. The boot receiver does not scan. A finished run does not schedule the next one: setPeriodic and setInexactRepeating repeat. There is no continuous background watchdog: if the system stops the schedule while the app is closed and there is no boot, it is restored only on the next open.
 
 ---
 
@@ -158,7 +158,7 @@ Source: [Official source (developer.android.com)](https://developer.android.com/
 ### Minimum interval — none for us
 
 - The well-known 15-minute minimum applies only to periodic work (WorkManager PeriodicWork / periodic JobScheduler).
-- We use one-time, self-rescheduling jobs, which have no such minimum — any number of minutes is allowed, and the app blocks no value.
+- The scan uses setPeriodic. The period is 8, 12, or 24 hours, so the 15-minute floor does not change it. A finished run does not register the next one.
 
 Source: [Source: periodic minimum (15 min)](https://developer.android.com/reference/androidx/work/PeriodicWorkRequest)
 

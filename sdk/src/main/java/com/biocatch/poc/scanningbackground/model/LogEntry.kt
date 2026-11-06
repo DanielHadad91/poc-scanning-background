@@ -26,7 +26,7 @@ enum class RunStatus(val outcome: Outcome) {
     SCAN_FAILED(Outcome.FAILED),
 }
 
-enum class Trigger { SCHEDULED, MANUAL }
+enum class Trigger { SCHEDULED, MANUAL, REGISTER }
 
 /** What an entry records: a scan run, a device boot, or the schedule being (re)armed. */
 enum class EntryKind { SCAN, BOOT, SCHEDULE }

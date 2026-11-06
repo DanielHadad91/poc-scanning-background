@@ -3,6 +3,7 @@ package com.biocatch.poc.scanningbackground.storage
 import android.content.Context
 import android.content.SharedPreferences
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin
+import com.biocatch.poc.scanningbackground.scheduling.ScanWindow
 
 /** User settings plus the time the scheduled run is armed for. */
 class SettingsStore(context: Context) {
@@ -10,19 +11,53 @@ class SettingsStore(context: Context) {
     private val prefs: SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    /** The last URL the user saved, or a working default so the app sends out of the box. */
+    /** The last URL the host saved. Empty when nothing is stored. A blank URL does not change the schedule or scan. */
     var serverUrl: String
-        get() = prefs.getString(KEY_SERVER_URL, null)?.trim()?.takeIf { it.isNotBlank() } ?: DEFAULT_SERVER_URL
+        get() = storedServerUrl().orEmpty()
         set(value) = prefs.edit().putString(KEY_SERVER_URL, value.trim()).apply()
+
+    /** Null when no URL is stored or the stored value is blank. */
+    fun storedServerUrl(): String? =
+        prefs.getString(KEY_SERVER_URL, null)?.trim()?.takeIf { it.isNotEmpty() }
 
     /** When on, a run that hits the free quota mints a fresh webhook.site URL and resends automatically. */
     var autoRenew: Boolean
         get() = prefs.getBoolean(KEY_AUTO_RENEW, true)
         set(value) = prefs.edit().putBoolean(KEY_AUTO_RENEW, value).apply()
 
-    var intervalMinutes: Int
-        get() = prefs.getInt(KEY_INTERVAL_MINUTES, DEFAULT_INTERVAL_MINUTES)
-        set(value) = prefs.edit().putInt(KEY_INTERVAL_MINUTES, value.coerceAtLeast(MIN_INTERVAL_MINUTES)).apply()
+    /** How many runs fall in the 24-hour window. 0 until a schedule call is given 1, 2, or 3. */
+    var intervals: Int
+        get() = prefs.getInt(KEY_INTERVALS, 0)
+        set(value) = prefs.edit().putInt(KEY_INTERVALS, value).apply()
+
+    /** Gap in minutes derived from [intervals], for history and missed-run math. 0 when unset. */
+    val intervalMinutes: Int
+        get() = if (ScanWindow.isValid(intervals)) (ScanWindow.HOURS * 60) / intervals else 0
+
+    /** The intervals value the registered job or alarm was armed with. 0 when nothing is armed. */
+    var armedIntervals: Int
+        get() = prefs.getInt(KEY_ARMED_INTERVALS, 0)
+        set(value) = prefs.edit().putInt(KEY_ARMED_INTERVALS, value).apply()
+
+    /** Offset inside the period, counted from [windowStartMillis]. Kept until [intervals] changes. API 19–20 waits this long and the first alarm is the scan. API 21+ waits this long, then registers the periodic job, including after boot. -1 until the first arm. */
+    var phaseOffsetMillis: Long
+        get() = prefs.getLong(KEY_PHASE_OFFSET, -1L)
+        set(value) = prefs.edit().putLong(KEY_PHASE_OFFSET, value).apply()
+
+    /** When this window started: the scanSchedule call that chose the offset, or the latest boot. -1 until the first arm. */
+    var windowStartMillis: Long
+        get() = prefs.getLong(KEY_WINDOW_START, -1L)
+        set(value) = prefs.edit().putLong(KEY_WINDOW_START, value).apply()
+
+    /** The [intervals] value [phaseOffsetMillis] was chosen for. */
+    var phaseIntervals: Int
+        get() = prefs.getInt(KEY_PHASE_INTERVALS, 0)
+        set(value) = prefs.edit().putInt(KEY_PHASE_INTERVALS, value).apply()
+
+    /** Set by [com.biocatch.poc.scanningbackground.sdk.ScanningSdk.cancelScanSchedule]. Boot leaves this off. */
+    var scheduleCancelled: Boolean
+        get() = prefs.getBoolean(KEY_SCHEDULE_CANCELLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_SCHEDULE_CANCELLED, value).apply()
 
     /** 0 when nothing is armed. Written by the scheduler; JobScheduler itself does not expose it. */
     var nextRunAt: Long
@@ -51,14 +86,14 @@ class SettingsStore(context: Context) {
         get() = prefs.getBoolean(KEY_FORCE_ALARM, false)
 
     companion object {
-        /** A pre-created webhook.site URL so a fresh install works immediately; rotated by auto-renew when full. */
-        const val DEFAULT_SERVER_URL = "https://webhook.site/4274ca33-d7f7-4ae5-bc29-6c2defd8148a"
-        const val DEFAULT_INTERVAL_MINUTES = 60
-        const val MIN_INTERVAL_MINUTES = 1
-
         private const val PREFS_NAME = "settings"
         private const val KEY_SERVER_URL = "server_url"
-        private const val KEY_INTERVAL_MINUTES = "interval_minutes"
+        private const val KEY_INTERVALS = "intervals"
+        private const val KEY_ARMED_INTERVALS = "armed_intervals"
+        private const val KEY_PHASE_OFFSET = "phase_offset_millis"
+        private const val KEY_WINDOW_START = "window_start_millis"
+        private const val KEY_PHASE_INTERVALS = "phase_intervals"
+        private const val KEY_SCHEDULE_CANCELLED = "schedule_cancelled"
         private const val KEY_NEXT_RUN_AT = "next_run_at"
         private const val KEY_ORIGIN = "schedule_origin"
         private const val KEY_HISTORY_CLEARED_AT = "history_cleared_at"

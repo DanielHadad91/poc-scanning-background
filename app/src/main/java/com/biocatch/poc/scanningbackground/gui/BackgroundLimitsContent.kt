@@ -269,14 +269,14 @@ object BackgroundLimitsContent {
     /** How often background runs can happen and how late they can be, with official sources. */
     fun frequency(heb: Boolean): List<GuideItem> = listOf(
         GuideItem(
-            title = tr(heb, "מרווח מינימלי — אין אצלנו", "Minimum interval — none for us"),
+            title = tr(heb, "מרווח מינימלי — 15 דקות, לא מגיעים אליו", "Minimum interval — 15 minutes, not reached"),
             tone = Tone.OK,
             lines = if (heb) listOf(
-                "המינימום הידוע של 15 דקות חל רק על משימות מחזוריות (PeriodicWork ב-WorkManager / JobScheduler מחזורי).",
-                "אנחנו משתמשים במשימות חד-פעמיות שמתזמנות את עצמן מחדש, ולכן אין להן מינימום — אפשר לתזמן כל מספר דקות, והאפליקציה לא חוסמת שום ערך.",
+                "המינימום של 15 דקות חל על משימת JobScheduler מחזורית מ-API 24.",
+                "הסריקה משתמשת ב-setPeriodic. המחזור הוא 8, 12 או 24 שעות, אז הרצפה לא משנה אותו. ריצה שהסתיימה לא רושמת את הבאה.",
             ) else listOf(
-                "The well-known 15-minute minimum applies only to periodic work (WorkManager PeriodicWork / periodic JobScheduler).",
-                "We use one-time, self-rescheduling jobs, which have no such minimum — any number of minutes is allowed, and the app blocks no value.",
+                "The 15-minute minimum applies to a periodic JobScheduler job from API 24.",
+                "The scan uses setPeriodic. The period is 8, 12, or 24 hours, so the floor does not change it. A finished run does not register the next one.",
             ),
             actions = listOf(docSource("$DOC/reference/androidx/work/PeriodicWorkRequest", heb, "מקור: מינימום מחזורי (15 דקות)", "Source: periodic minimum (15 min)")),
         ),

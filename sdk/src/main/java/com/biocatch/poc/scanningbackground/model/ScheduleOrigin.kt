@@ -7,7 +7,10 @@ enum class ScheduleOrigin {
     /** First time the app was opened; nothing was scheduled before. */
     FIRST_OPEN,
 
-    /** A scheduled run finished and armed the next one. This is the healthy steady state. */
+    /**
+     * Kept so older history rows still parse. A finished run does not arm the next one.
+     * [android.app.job.JobInfo.Builder.setPeriodic] and [android.app.AlarmManager.setInexactRepeating] repeat.
+     */
     CONTINUED_AFTER_RUN,
 
     /** The boot receiver re-armed it after the device restarted. */

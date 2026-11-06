@@ -95,7 +95,9 @@ class MainActivity : LocaleAwareActivity() {
         footer = findViewById(R.id.footer)
 
         serverUrl.setText(settings.serverUrl)
-        intervalMinutes.setText(String.format(Locale.US, "%d", settings.intervalMinutes))
+        if (com.biocatch.poc.scanningbackground.scheduling.ScanWindow.isValid(settings.intervals)) {
+            intervalMinutes.setText(String.format(Locale.US, "%d", settings.intervals))
+        }
 
         findViewById<Button>(R.id.runNow).setOnClickListener { runNow() }
         findViewById<Button>(R.id.saveUrl).setOnClickListener { saveServerUrl() }
@@ -244,7 +246,7 @@ class MainActivity : LocaleAwareActivity() {
             nextCountdown.setTextColor(format.color(R.color.warn))
         }
         renderTimingLimit(nextRunAt, schedulerName)
-        scheduleConfirmation.text = getString(R.string.next_confirmed, settings.intervalMinutes, schedulerName)
+        scheduleConfirmation.text = getString(R.string.next_confirmed, settings.intervals, schedulerName)
         scheduleConfirmation.setTextColor(format.color(R.color.ok))
 
         val origin = settings.scheduleOrigin
@@ -360,14 +362,14 @@ class MainActivity : LocaleAwareActivity() {
     }
 
     private fun applyInterval() {
-        val minutes = intervalMinutes.text.toString().trim().toIntOrNull()
-        if (minutes == null || minutes < SettingsStore.MIN_INTERVAL_MINUTES) {
+        val intervals = intervalMinutes.text.toString().trim().toIntOrNull()
+        if (intervals == null || intervals !in 1..3) {
             toast(getString(R.string.toast_interval_invalid))
             return
         }
         hideKeyboard()
-        settings.intervalMinutes = minutes
-        confirmSchedule(ScanScheduling.reschedule(this, getString(R.string.log_schedule_interval, minutes), ScheduleOrigin.INTERVAL_CHANGED))
+        val url = serverUrl.text.toString().trim()
+        ScanningSdk.scanSchedule(this, intervals, url)?.let(::confirmSchedule)
         render()
     }
 
