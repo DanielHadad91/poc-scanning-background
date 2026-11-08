@@ -58,6 +58,7 @@ class MainActivity : LocaleAwareActivity() {
     private lateinit var lastRunBody: TextView
     private lateinit var successfulRuns: TextView
     private lateinit var viewHistory: Button
+    private lateinit var cancelSchedule: Button
     private lateinit var serverUrl: EditText
     private lateinit var intervalMinutes: EditText
     private lateinit var footer: TextView
@@ -100,6 +101,8 @@ class MainActivity : LocaleAwareActivity() {
         }
 
         findViewById<Button>(R.id.runNow).setOnClickListener { runNow() }
+        cancelSchedule = findViewById(R.id.cancelSchedule)
+        cancelSchedule.setOnClickListener { cancelArmedSchedule() }
         findViewById<Button>(R.id.saveUrl).setOnClickListener { saveServerUrl() }
         findViewById<Button>(R.id.openViewer).setOnClickListener { openViewer() }
         findViewById<Button>(R.id.createFresh).setOnClickListener { createFreshLink() }
@@ -188,6 +191,7 @@ class MainActivity : LocaleAwareActivity() {
         renderDeviceBattery()
         renderLastRun(scans.firstOrNull(), now)
         renderSuccessfulRuns(scans)
+        cancelSchedule.isEnabled = !settings.scheduleCancelled && settings.nextRunAt > 0L
         viewHistory.text = getString(R.string.view_history, entries.size)
         footer.text = listOf(
             getString(if (InstalledAppsScanner(this).isQapGranted()) R.string.footer_qap_granted else R.string.footer_qap_missing),
@@ -359,6 +363,13 @@ class MainActivity : LocaleAwareActivity() {
 
     private fun runNow() {
         toast(getString(if (ScanScheduling.runNow(this)) R.string.toast_run_enqueued else R.string.toast_run_refused))
+    }
+
+    /** Stays off across leaving the app and across reboot. Apply and schedule turns it back on. */
+    private fun cancelArmedSchedule() {
+        ScanningSdk.cancelScanSchedule(this)
+        toast(getString(R.string.toast_schedule_cancelled))
+        render()
     }
 
     private fun applyInterval() {

@@ -86,6 +86,8 @@
     <string name="next_not_scheduled">Not scheduled. Tap Apply and schedule in settings</string>
     <string name="next_no_time">--:--:--</string>
     <string name="run_now">Run now</string>
+    <string name="cancel_schedule">Cancel schedule</string>
+    <string name="toast_schedule_cancelled">Schedule cancelled. It stays off until you tap Apply and schedule.</string>
 
     <!-- Last run -->
     <string name="section_last_run">Last run</string>

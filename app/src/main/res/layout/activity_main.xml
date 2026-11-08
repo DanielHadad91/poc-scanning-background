@@ -111,6 +111,11 @@
             style="@style/PrimaryButton"
             android:text="@string/run_now" />
 
+        <Button
+            android:id="@+id/cancelSchedule"
+            style="@style/SecondaryButton"
+            android:text="@string/cancel_schedule" />
+
         <!-- Last run, including any failure -->
         <LinearLayout style="@style/Card">
 

@@ -86,6 +86,8 @@
     <string name="next_not_scheduled">לא מתוזמן. אפשר ללחוץ על החל ותזמן בהגדרות</string>
     <string name="next_no_time">--:--:--</string>
     <string name="run_now">הרץ עכשיו</string>
+    <string name="cancel_schedule">ביטול תזמון</string>
+    <string name="toast_schedule_cancelled">התזמון בוטל. הוא נשאר כבוי עד שלוחצים על החל ותזמן.</string>
 
     <!-- Last run -->
     <string name="section_last_run">הריצה האחרונה</string>
