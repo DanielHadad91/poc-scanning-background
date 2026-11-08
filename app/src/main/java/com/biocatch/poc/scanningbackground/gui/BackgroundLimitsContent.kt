@@ -318,6 +318,46 @@ object BackgroundLimitsContent {
         ),
     )
 
+    /**
+     * API 21+ does not set a scan minute. Many devices that arm together can post at once.
+     * API 19–20 aim an alarm at a stored offset; that delivery is the scan.
+     */
+    fun scanTiming(heb: Boolean): List<GuideItem> = listOf(
+        GuideItem(
+            title = tr(heb, "השעון הוא סוף החלון, לא דקת הסריקה", "The clock is the end of the window, not the scan minute"),
+            tone = Tone.INFO,
+            lines = if (heb) listOf(
+                "ריצה הבאה בעוד 8 שעות אינה זמן סריקה מדויק. ל-3 ריצות ב-24 שעות המחזור הוא 8 שעות, והשעון הוא סוף המחזור. הסריקה יכולה להתחיל בכל רגע בתוכו. ל-2 ריצות החלון הוא 12 שעות, ולריצה אחת 24 שעות.",
+                "האפליקציה קובעת רק את אורך המחזור: 24 שעות חלקי 1, 2 או 3. ב-API 21+ ל-setPeriodic אין זמן התחלה, ולכן האפליקציה לא בוחרת את הדקה.",
+                "השרת לא קובע את הזמן. ב-API 21+ JobScheduler של המכשיר בוחר את הרגע בתוך המחזור.",
+                "ב-API 19–20 האפליקציה מגרילה היסט אחד בתוך המחזור ומכוונת אליו את setInexactRepeating. הירי הזה הוא הסריקה. המערכת עדיין יכולה למסור את האזעקה אחרי זמן הכוונה. ההיסט נשמר במכשיר עד שמספר הריצות משתנה. API 21+ לא משתמש בו.",
+            ) else listOf(
+                "A next run 8 hours away is not an exact scan time. For 3 runs in 24 hours the period is 8 hours, and the clock is the end of that period. The scan may start anywhere inside it. Two runs use a 12-hour window, and one run uses 24 hours.",
+                "The app sets only the period: 24 hours divided by 1, 2, or 3. On API 21+ setPeriodic cannot take a start time, so the app does not choose the minute.",
+                "The server does not set the time. On API 21+ the device's JobScheduler chooses the instant inside the period.",
+                "On API 19–20 the app rolls one offset inside the period and aims setInexactRepeating at it. That delivery is the scan. The system may still deliver the alarm later than the aim. The offset stays on the device until the run count changes. API 21+ does not use it.",
+            ),
+            actions = listOf(docSource("$DOC/reference/android/app/job/JobInfo.Builder", heb, "מקור: setPeriodic", "Source: setPeriodic")),
+        ),
+        GuideItem(
+            title = tr(heb, "עומס על השרת כשמכשירים רבים נרשמים יחד", "Server burst when many devices arm together"),
+            tone = Tone.WARN,
+            lines = if (heb) listOf(
+                "ב-API 21–22 אין Doze. העבודה בדרך כלל מתחילה בשניות ספורות מהרגע שהמחזור מגיע, ולכן מכשירים שנרשמו באותו רגע סורקים יחד. השרת מקבל פרץ.",
+                "מ-API 23, Doze יכול לעכב את העבודות ולשחרר מכשירים רדומים רבים באותו חלון תחזוקה. גם זה פרץ.",
+                "מ-API 35 ההמתנה הנוספת היא עד כ-31 דקות, ומכשיר עם מסך דולק עשוי לחכות עד שהמסך נכבה. מכשירים שנרשמו יחד עדיין יכולים ליפול באותה דקה.",
+                "פיזור אחיד על פני 8 שעות היה שם שני מכשירים באותה דקה בערך פעם אחת מתוך 480. כ-1,000 מכשירים הם כ-2 סריקות בדקה, וכ-10,000 כ-21 בדקה. API 21 לא מפזר כך: הוא רץ קרוב לזמן היעד.",
+                "האפליקציה לא מוסיפה השהיה אקראית לפני רישום העבודה המחזורית. זמן רישום משותף הוא חלון משותף.",
+            ) else listOf(
+                "API 21–22 have no Doze. The job usually starts within seconds of when the period is due, so devices that arm together scan together. The server receives a burst.",
+                "From API 23, Doze can hold those jobs and release many idle devices in the same maintenance window. That is another burst.",
+                "From API 35 the extra wait is up to about 31 minutes, and a screen-on device may wait until the screen turns off. Devices that armed together can still land in the same minute.",
+                "A uniform scatter across an 8-hour period would put two devices in the same minute about 1 time in 480. About 1,000 devices would be about 2 scans a minute, and about 10,000 about 21 a minute. API 21 does not scatter that way: it runs near the due time.",
+                "The app does not add a random delay before registering the periodic job. A shared arm time is a shared window.",
+            ),
+        ),
+    )
+
     /** Screen-off specifically: where it matters, where it does not, and what can be done. */
     fun screenOff(heb: Boolean): List<GuideItem> = listOf(
         GuideItem(

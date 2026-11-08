@@ -72,6 +72,9 @@ class LimitsActivity : LocaleAwareActivity() {
         addSection(getString(R.string.section_frequency))
         BackgroundLimitsContent.frequency(heb).forEach(::addCard)
 
+        addSection(getString(R.string.section_scan_timing))
+        BackgroundLimitsContent.scanTiming(heb).forEach(::addCard)
+
         addSection(getString(R.string.section_screen_off))
         BackgroundLimitsContent.screenOff(heb).forEach(::addCard)
 

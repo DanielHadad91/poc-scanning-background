@@ -17,11 +17,9 @@ import java.util.concurrent.TimeUnit
  * API 21+. The scheduled scan is one periodic job. The system starts [ScanJobService] in a fresh
  * process when a period is due, including after the app was swiped away, and [JobInfo.Builder.setPersisted]
  * restores that job after reboot. [com.biocatch.poc.scanningbackground.receivers.BootReceiver] then
- * replaces it, waits the stored offset from the boot, and then registers the periodic job again.
+ * replaces it by registering the periodic job again at the boot. There is no offset wait.
  *
- * [setPeriodic] cannot take a start delay, so a normal arm first posts job [REGISTER_JOB_ID]. That
- * job does not scan. It waits until the same offset the alarm would use, then registers the periodic
- * job, and the period starts at that registration. The run may still fall anywhere inside the period.
+ * The period starts when [schedule] runs. The scan may fall anywhere inside that period.
  * [com.biocatch.poc.scanningbackground.storage.SettingsStore.nextRunAt] is the end of the current
  * period, not the clock time the system will pick. From API 24 a period
  * shorter than [SchedulingLimits.PERIODIC_MIN_MINUTES] is raised to that floor. From Android 15 (API 35)
@@ -29,7 +27,7 @@ import java.util.concurrent.TimeUnit
  * screen is on it may wait until the screen turns off.
  *
  * Calling [schedule] again on [SCHEDULED_JOB_ID] restarts the period. A finished run must not call it.
- * The repeat belongs to [JobInfo.Builder.setPeriodic]. [cancelScheduled] removes the periodic job and the registration job. If the periodic job is
+ * The repeat belongs to [JobInfo.Builder.setPeriodic]. [cancelScheduled] removes the periodic job and a leftover registration job from an older build. If the periodic job is
  * executing, [android.app.job.JobScheduler.cancel] stops it and ignores
  * [android.app.job.JobService.onStopJob]'s return value, so the job is not put back.
  *
@@ -43,9 +41,7 @@ class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler 
 
     private val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
 
-    override fun isScheduled(): Boolean = jobScheduler.allPendingJobs.any {
-        it.id == SCHEDULED_JOB_ID || it.id == REGISTER_JOB_ID
-    }
+    override fun isScheduled(): Boolean = hasPeriodicJob()
 
     /** True when the periodic scan job itself is pending. The registration job does not count. */
     fun hasPeriodicJob(): Boolean = jobScheduler.allPendingJobs.any { it.id == SCHEDULED_JOB_ID }
@@ -76,14 +72,13 @@ class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler 
             .setExtras(extras)
         when (trigger) {
             // No override deadline: a deadline would start the job without network and lose "send when online".
-            // setPeriodic cannot take a delay. The period starts when this call runs.
-            // The registration job makes this call at the stored offset, including after boot.
+            // setPeriodic cannot take a delay. The period starts when this call runs, including after boot.
             Trigger.SCHEDULED -> builder
                 .setPeriodic(enforcedPeriodMillis(periodMillis))
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPersisted(true)
-            // Waits until the alarm offset, then registers the periodic job. It does not scan.
-            // Not persisted: a reboot drops it, and the boot receiver schedules the wait again.
+            // Leftover from builds that waited an offset before setPeriodic. New arms do not post this job.
+            // Not persisted: a reboot drops it, and the boot receiver registers the periodic job directly.
             Trigger.REGISTER -> builder
                 .setMinimumLatency(initialDelayMillis)
                 .setOverrideDeadline(initialDelayMillis)

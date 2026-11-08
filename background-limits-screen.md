@@ -24,7 +24,7 @@
   - Schedule existed and kept running in the background
 - Next run scheduled for `{date-time}`  — or, when there is none: No active schedule right now
 - Mechanism: `{JobScheduler | AlarmManager}`
-- On every open the app checks whether the schedule exists, and if not, re-creates it and records that. After the device boots, API 19–20 calls setInexactRepeating at the boot and passes the stored offset as the first fire. API 21+ waits that offset, then registers the periodic job. The boot receiver does not scan. A finished run does not schedule the next one: setPeriodic and setInexactRepeating repeat. There is no continuous background watchdog: if the system stops the schedule while the app is closed and there is no boot, it is restored only on the next open.
+- On every open the app checks whether the schedule exists, and if not, re-creates it and records that. After the device boots, API 19–20 calls setInexactRepeating at the boot and passes the stored offset as the first fire. That delivery is the scan. API 21+ registers the periodic job at the boot, with no offset wait; the scan may start anywhere in the period. The boot receiver does not scan. A finished run does not schedule the next one: setPeriodic and setInexactRepeating repeat. There is no continuous background watchdog: if the system stops the schedule while the app is closed and there is no boot, it is restored only on the next open.
 
 ---
 
@@ -181,6 +181,29 @@ Source: [Source: JobScheduler](https://developer.android.com/reference/android/a
 - Charging removes the limits. The values are not a guarantee and may change between releases.
 
 Source: [Source: per-bucket limits](https://developer.android.com/topic/performance/power/power-details)
+
+---
+
+## Scan timing collision on Android 21+
+
+A next run shown 8 hours away is not an exact scan time. For 3 runs in 24 hours the period is 8 hours, and the clock is the end of that period. The scan may start anywhere inside it. The same rule gives a 12-hour window for 2 runs and a 24-hour window for 1 run.
+
+### Who sets the time
+
+- The app sets only the period: 24 hours divided by 1, 2, or 3. On API 21+ `JobScheduler.setPeriodic` cannot take a start time, so the app does not choose the minute.
+- The server does not set it. The device's JobScheduler chooses the instant inside the period.
+- API 21–22 have no Doze. The job usually starts within seconds of when the period is due.
+- From API 23, Doze can move that start to a maintenance window.
+- From API 35 a ready network job can also wait up to about 31 minutes, and while the screen is on it may wait until the screen turns off.
+- API 19–20 are the other path. The app rolls one offset inside the period and aims `setInexactRepeating` at it. That delivery is the scan. The system may still deliver the alarm later than the aim. The offset stays on the device until the run count changes. The server does not set it, and API 21+ does not use it.
+
+### Burst on the server
+
+- Devices that arm at the same moment share the same period. On API 21–22 they then scan within seconds of each other, so the server gets a burst.
+- From API 23, Doze can hold those jobs and release many idle devices in the same maintenance window. That is another burst.
+- The API 35 wait is about 31 minutes, not the whole period. Devices that armed together can still land in the same minute.
+- A uniform scatter across an 8-hour period would put two devices in the same minute about 1 time in 480. About 1,000 devices would be about 2 scans a minute, and about 10,000 about 21 a minute. API 21 does not scatter that way: it runs near the due time.
+- The app does not add a random delay before registering the periodic job. A shared arm time is a shared window.
 
 ---
 

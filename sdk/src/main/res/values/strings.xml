@@ -8,7 +8,7 @@
     <string name="log_schedule_interval">Schedule replaced: %1$d runs in 24 hours</string>
     <string name="log_schedule_no_url">Not scheduled. No server URL is stored</string>
     <string name="log_schedule_bad_intervals">Not scheduled. intervals must be 1, 2, or 3</string>
-    <string name="log_schedule_after_boot">Re-scheduled after device boot. API 19–20 calls the repeating alarm now and passes the stored offset as the first fire. API 21+ waits that offset, then registers the periodic job</string>
+    <string name="log_schedule_after_boot">Re-scheduled after device boot. API 19–20 calls the repeating alarm now and passes the stored offset as the first fire. API 21+ registers the periodic job now, with no offset wait</string>
     <string name="log_schedule_recreated">Re-created on app entry: the previous schedule was not found</string>
     <string name="log_schedule_failed">The system refused to schedule (%1$s)</string>
     <string name="log_schedule_after_run_failed">The repeating schedule was not registered</string>

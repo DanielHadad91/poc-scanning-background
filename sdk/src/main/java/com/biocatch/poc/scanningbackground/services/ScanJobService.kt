@@ -11,7 +11,8 @@ import kotlin.concurrent.thread
 /**
  * API 21+. Started by the system, also when the app is closed, so it never relies on the screen.
  * The periodic job repeats by itself. A finished scan does not register the next run.
- * A registration job only calls setPeriodic once and does not scan.
+ * A registration job is left over from builds that waited an offset. New arms do not post one.
+ * If one still fires, it calls setPeriodic once and does not scan.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class ScanJobService : JobService() {

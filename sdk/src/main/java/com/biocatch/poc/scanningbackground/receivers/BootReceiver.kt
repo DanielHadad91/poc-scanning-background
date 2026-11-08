@@ -15,8 +15,8 @@ import com.biocatch.poc.scanningbackground.storage.SettingsStore
 /**
  * Wakes the app after a reboot without the user opening it and records the boot. A schedule that
  * was not cancelled is armed again. API 19–20 calls setInexactRepeating at the boot and passes the
- * stored offset as the first fire. That delivery is the scan. API 21+ waits that offset, then registers
- * the periodic job. This receiver does not scan. A cancelled
+ * stored offset as the first fire. That delivery is the scan. API 21+ registers the periodic job at
+ * the boot, with no offset wait. This receiver does not scan. A cancelled
  * schedule stays off. Android delivers BOOT_COMPLETED only to an app opened at least once and
  * not force-stopped.
  */
@@ -47,7 +47,7 @@ class BootReceiver : BroadcastReceiver() {
         }
         // Alarms are dropped on reboot. A persisted job can return on its previous period, so this
         // replaces it. API 19–20 calls setInexactRepeating at the boot and passes the stored offset as
-        // the first fire. API 21+ waits that offset, then registers the periodic job. This does not scan.
+        // the first fire. API 21+ registers the periodic job at the boot. This does not scan.
         ScanScheduling.reschedule(
             appContext,
             appContext.getString(R.string.log_schedule_after_boot),

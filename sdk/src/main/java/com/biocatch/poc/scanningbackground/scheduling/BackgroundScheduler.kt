@@ -15,9 +15,9 @@ interface BackgroundScheduler {
     /**
      * Arms [trigger]. A scheduled trigger repeats every [periodMillis]. On API 19–20 the call is
      * immediate and [initialDelayMillis] is added to now as the first-fire time. That delivery is the
-     * scan. On API 21+ the registration job waits [initialDelayMillis], then registers the periodic job.
-     * After boot that delay is the stored offset counted from the boot. A manual trigger is one run.
-     * Returns false if the system refused it.
+     * scan. After boot that delay is the stored offset counted from the boot. On API 21+ the periodic
+     * job is registered at this call, [initialDelayMillis] is ignored, and the scan may fall anywhere
+     * in the period. A manual trigger is one run. Returns false if the system refused it.
      */
     fun schedule(trigger: Trigger, initialDelayMillis: Long, periodMillis: Long): Boolean
 

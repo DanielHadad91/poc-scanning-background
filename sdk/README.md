@@ -89,7 +89,7 @@ ScanningSdk.scanSchedule(
 ```
 
 That is the entire integration. From here the SDK scans, uploads, records each run, and repeats.
-The 24-hour window starts at the `scanSchedule` call that chose the offset. The offset is a position inside the period, counted from that call. API 19–20 calls `setInexactRepeating` at that call and passes the call plus the offset as the first fire. That delivery is the scan. API 21+ waits that same offset, then registers the periodic job. After boot, API 19–20 makes the same call at the boot and passes the boot plus the stored offset as the first fire. API 21+ waits that offset, then registers the periodic job. This stays off when `cancelScanSchedule` was called. The boot receiver does not scan, and a finished run does not register the next one. `setPeriodic` and `setInexactRepeating` own the repeat.
+API 19–20 calls `setInexactRepeating` at the `scanSchedule` call and passes that call plus one stored offset as the first fire. That delivery is the scan. The offset stays until the count changes. API 21+ registers the periodic job at that call, with no offset wait, and the scan may start anywhere in the period. The time recorded as the next run is the end of that period. After boot, API 19–20 makes the same call at the boot and passes the boot plus the stored offset as the first fire. API 21+ registers the periodic job at the boot. This stays off when `cancelScanSchedule` was called. The boot receiver does not scan, and a finished run does not register the next one. `setPeriodic` and `setInexactRepeating` own the repeat.
 
 ## Public API (`com.biocatch.poc.scanningbackground.sdk.ScanningSdk`)
 

@@ -44,8 +44,8 @@ object ScanScheduling {
 
     /**
      * Replaces whatever is armed and records the result. After boot, API 19–20 calls setInexactRepeating
-     * at the boot and passes the stored offset as the first fire. API 21+ waits that offset, then
-     * registers the periodic job.
+     * at the boot and passes the stored offset as the first fire. That delivery is the scan. API 21+
+     * registers the periodic job at the boot, with no offset wait.
      */
     fun reschedule(context: Context, reason: String, origin: ScheduleOrigin): LogEntry {
         val scheduler = BackgroundScheduler.from(context)
@@ -76,6 +76,34 @@ object ScanScheduling {
         }
         val periodMillis = ScanWindow.periodMillis(intervals)
         val now = System.currentTimeMillis()
+        // API 19–20 aims the alarm at one offset inside the period. That delivery is the scan.
+        // API 21+ has no offset: setPeriodic starts now, and the scan may fall anywhere in the period.
+        val alarmAimedAtOffset = scheduler.name != JobSchedulerScheduler.NAME
+        val initialDelayMillis = if (alarmAimedAtOffset) {
+            alarmOffsetDelay(settings, intervals, periodMillis, now, origin)
+        } else {
+            0L
+        }
+        if (!scheduler.schedule(Trigger.SCHEDULED, initialDelayMillis, periodMillis)) {
+            settings.nextRunAt = 0L
+            settings.armedIntervals = 0
+            return null
+        }
+        val nextRunAt = if (alarmAimedAtOffset) now + initialDelayMillis else now + periodMillis
+        settings.nextRunAt = nextRunAt
+        settings.armedIntervals = intervals
+        settings.scheduleOrigin = origin
+        return nextRunAt
+    }
+
+    /** Delay until the stored alarm offset. A new count rolls a new offset and keeps it until the count changes. */
+    private fun alarmOffsetDelay(
+        settings: SettingsStore,
+        intervals: Int,
+        periodMillis: Long,
+        now: Long,
+        origin: ScheduleOrigin,
+    ): Long {
         val newPhase = settings.phaseIntervals != intervals || settings.phaseOffsetMillis < 0L
         if (newPhase) {
             settings.phaseOffsetMillis = Random().nextInt(periodMillis.toInt()).toLong()
@@ -85,29 +113,11 @@ object ScanScheduling {
             // Boot keeps the stored offset. The window start becomes the boot, so the delay is that offset.
             settings.windowStartMillis = now
         }
-        // A scanSchedule call and a boot both pass this delay into the scheduler.
-        // API 19–20 calls setInexactRepeating now. The first-fire time is now plus this delay.
-        // API 21+ waits this delay, then registers the periodic job.
-        val initialDelayMillis = ScanWindow.delayUntilPhase(
+        return ScanWindow.delayUntilPhase(
             now,
             periodMillis,
             settings.phaseOffsetMillis,
             settings.windowStartMillis,
         )
-        val deferRegistration = scheduler.name == JobSchedulerScheduler.NAME
-        val trigger = if (deferRegistration) Trigger.REGISTER else Trigger.SCHEDULED
-        if (!scheduler.schedule(trigger, initialDelayMillis, periodMillis)) {
-            settings.nextRunAt = 0L
-            settings.armedIntervals = 0
-            return null
-        }
-        // AlarmManager registers now and the first fire is this delay later. That fire is the scan.
-        // The periodic job starts when the wait ends, and its run
-        // can fall anywhere before the end of that period.
-        val nextRunAt = if (deferRegistration) now + initialDelayMillis + periodMillis else now + initialDelayMillis
-        settings.nextRunAt = nextRunAt
-        settings.armedIntervals = intervals
-        settings.scheduleOrigin = origin
-        return nextRunAt
     }
 }

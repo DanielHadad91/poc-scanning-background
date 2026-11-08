@@ -18,6 +18,7 @@
     <string name="section_components">Our implementation: components</string>
     <string name="section_versions">Limits by Android version</string>
     <string name="section_frequency">Run frequency and delay</string>
+    <string name="section_scan_timing">Scan timing collision on Android 21+</string>
     <string name="section_screen_off">Screen off: where it matters</string>
     <string name="section_manufacturers">Limits by manufacturer (Don\'t kill my app)</string>
     <string name="section_quick_actions">Settings shortcuts</string>
@@ -31,7 +32,7 @@
     <string name="state_next_run">Next run scheduled for %1$s</string>
     <string name="state_not_scheduled">No active schedule right now</string>
     <string name="state_mechanism">Mechanism: %1$s</string>
-    <string name="state_selfheal">On every open the app checks whether the schedule exists, and if not, re-creates it and records that. After the device boots, API 19–20 calls setInexactRepeating at the boot and passes the stored offset as the first fire. API 21+ waits that offset, then registers the periodic job. The boot receiver does not scan. A finished run does not schedule the next one: setPeriodic and setInexactRepeating repeat. There is no continuous background watchdog: if the system stops the schedule while the app is closed and there is no boot, it is restored only on the next open.</string>
+    <string name="state_selfheal">On every open the app checks whether the schedule exists, and if not, re-creates it and records that. After the device boots, API 19–20 calls setInexactRepeating at the boot and passes the stored offset as the first fire. That delivery is the scan. API 21+ registers the periodic job at the boot, with no offset wait; the scan may start anywhere in the period. The boot receiver does not scan. A finished run does not schedule the next one: setPeriodic and setInexactRepeating repeat. There is no continuous background watchdog: if the system stops the schedule while the app is closed and there is no boot, it is restored only on the next open.</string>
     <string name="log_host_boot">Host boot receiver ran. It did not schedule.</string>
 
     <!-- Schedule origin -->

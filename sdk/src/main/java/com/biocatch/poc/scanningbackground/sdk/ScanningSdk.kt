@@ -55,14 +55,14 @@ object ScanningSdk {
 
     /**
      * Arms 1, 2, or 3 runs inside a hardcoded 24-hour window. A matching registration is left in
-     * place. A different count replaces it and picks a new offset. [backendDetectionUrl] null keeps
-     * the stored URL and leaves an existing registration running. A blank URL, or a URL that is not
-     * http or https, returns without arming, clearing, or scanning. API 19–20 calls setInexactRepeating
-     * at this call. The first-fire time passed in is this call plus the offset, and that delivery is the
-     * scan. API 21+ waits that offset, then registers the periodic job. The 24-hour window starts at the
-     * scanSchedule call that chose the offset. After boot, API 19–20 makes the same call at the boot and
-     * passes the boot plus the stored offset as the first fire. API 21+ waits that offset, then registers
-     * the periodic job. The boot receiver does not scan.
+     * place. A different count replaces it. On API 19–20 a new count also picks a new alarm offset.
+     * [backendDetectionUrl] null keeps the stored URL and leaves an existing registration running. A
+     * blank URL, or a URL that is not http or https, returns without arming, clearing, or scanning.
+     * API 19–20 calls setInexactRepeating at this call. The first-fire time passed in is this call plus
+     * the offset, and that delivery is the scan. API 21+ registers the periodic job at this call, with
+     * no offset wait, and the scan may fall anywhere in the period. After boot, API 19–20 makes the
+     * same call at the boot and passes the boot plus the stored offset as the first fire. API 21+
+     * registers the periodic job at the boot. The boot receiver does not scan.
      * Returns the schedule entry when it changed the registration, or null when it left one in place.
      */
     fun scanSchedule(context: Context, intervals: Int, backendDetectionUrl: String? = null): LogEntry? {

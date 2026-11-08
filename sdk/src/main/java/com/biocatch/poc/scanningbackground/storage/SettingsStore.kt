@@ -39,7 +39,7 @@ class SettingsStore(context: Context) {
         get() = prefs.getInt(KEY_ARMED_INTERVALS, 0)
         set(value) = prefs.edit().putInt(KEY_ARMED_INTERVALS, value).apply()
 
-    /** Offset inside the period, counted from [windowStartMillis]. Kept until [intervals] changes. API 19–20 waits this long and the first alarm is the scan. API 21+ waits this long, then registers the periodic job, including after boot. -1 until the first arm. */
+    /** Offset inside the period, counted from [windowStartMillis]. Kept until [intervals] changes. API 19–20 aims the alarm at this offset, and that delivery is the scan, including after boot. API 21+ does not use it. -1 until the first alarm arm. */
     var phaseOffsetMillis: Long
         get() = prefs.getLong(KEY_PHASE_OFFSET, -1L)
         set(value) = prefs.edit().putLong(KEY_PHASE_OFFSET, value).apply()
