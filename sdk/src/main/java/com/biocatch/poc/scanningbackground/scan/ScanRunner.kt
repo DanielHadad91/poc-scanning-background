@@ -1,4 +1,4 @@
-package com.biocatch.poc.scanningbackground.services
+package com.biocatch.poc.scanningbackground.scan
 
 import android.content.Context
 import android.os.Build

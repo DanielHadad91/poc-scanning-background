@@ -91,13 +91,13 @@ object BackgroundLimitsContent {
             title = tr(heb, "BootReceiver — האזנה להדלקת המכשיר", "BootReceiver — listens for device boot"),
             tone = Tone.INFO,
             lines = if (heb) listOf(
-                "משך ריצה ברקע: קצר. רק מתעד את ההדלקה ומתזמן מחדש.",
-                "שליחה לשרת: לא. הוא לא סורק ולא שולח, רק מחזיר את התזמון לפעולה.",
+                "משך ריצה ברקע: קצר. מתעד את ההדלקה ורושם מחדש את ההתראה של API 19–20.",
+                "שליחה לשרת: לא. הוא לא סורק ולא שולח. עבודה מחזורית שנשמרה ב-API 21+ נשארת.",
                 "תצוגה ללקוח: רץ ברקע ללא תצוגה.",
                 "מגבלה: Android מעביר BOOT_COMPLETED רק לאפליקציה שנפתחה לפחות פעם אחת ולא עברה force stop.",
             ) else listOf(
-                "Background runtime: short. It only records the boot and re-schedules.",
-                "Sends to the server: no. It does not scan or send, only brings the schedule back.",
+                "Background runtime: short. It records the boot and registers the API 19–20 alarm again.",
+                "Sends to the server: no. It does not scan or send. A persisted job on API 21+ stays in place.",
                 "Shown to the user: runs in the background with no UI.",
                 "Limitation: Android delivers BOOT_COMPLETED only to an app opened at least once and not force-stopped.",
             ),

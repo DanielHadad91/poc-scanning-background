@@ -11,11 +11,11 @@ An integrating app ships its own UI and wires the SDK through two things only: i
 | --- | --- | --- |
 | Background service `ScanJobService` (JobScheduler, API 21+) | Code ✔ | Manifest `<service>` entry ✔ |
 | `AlarmReceiver` (AlarmManager fallback, API 19–20) | Code ✔ | Manifest `<receiver>` entry ✔ |
-| `BootReceiver` (re-arm after reboot) | Code ✔ | Manifest `<receiver>` + `BOOT_COMPLETED` filter ✔ |
-| Scheduling (`ScanScheduling`, `ScanScheduler`), scanning, networking/TLS, storage, data models | Code ✔ | — |
+| `BootReceiver` (re-arm the API 19–20 alarm after reboot) | Code ✔ | Manifest `<receiver>` + `BOOT_COMPLETED` filter ✔ |
+| Scheduling (`ScanJobSchedulerContract`), scanning, networking/TLS, storage, data models | Code ✔ | — |
 | Permissions (`INTERNET`, `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED`, `QUERY_ALL_PACKAGES`) | — | `<uses-permission>` entries ✔ |
 | UI / Activities / strings / layouts | — (SDK has none) | All of it ✔ |
-| Entry call to start scanning | `ScanningSdk` facade ✔ | One `ScanningSdk.initialize(...)` call ✔ |
+| Entry call to start scanning | `ScanningSdk` facade ✔ | One `ScanningSdk.scanSchedule(...)` call ✔ |
 
 **Why the manifest is the client's job:** component and permission declarations only take effect in the
 installed app's *merged* manifest. The SDK deliberately declares none, so the integrator stays in full
@@ -54,18 +54,18 @@ Use the SDK's **fully-qualified class names** (do not use leading-dot relative n
 
     <!-- API 21+: runs the scan when the app is closed, after a swipe and after a reboot. -->
     <service
-        android:name="com.biocatch.poc.scanningbackground.services.ScanJobService"
+        android:name="com.biocatch.poc.scanningbackground.scanjobscheduler.ScanJobService"
         android:exported="false"
         android:permission="android.permission.BIND_JOB_SERVICE" />
 
     <!-- API 19-20: the AlarmManager fallback. -->
     <receiver
-        android:name="com.biocatch.poc.scanningbackground.receivers.AlarmReceiver"
+        android:name="com.biocatch.poc.scanningbackground.scanjobschedulerbelow21.AlarmReceiver"
         android:exported="false" />
 
     <!-- Re-arms the schedule after a reboot without the user opening the app. -->
     <receiver
-        android:name="com.biocatch.poc.scanningbackground.receivers.BootReceiver"
+        android:name="com.biocatch.poc.scanningbackground.scanjobschedulerbelow21.BootReceiver"
         android:exported="true">
         <intent-filter>
             <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -89,7 +89,7 @@ ScanningSdk.scanSchedule(
 ```
 
 That is the entire integration. From here the SDK scans, uploads, records each run, and repeats.
-API 19–20 calls `setInexactRepeating` at the `scanSchedule` call and passes that call plus one stored offset as the first fire. That delivery is the scan. The offset stays until the count changes. API 21+ registers the periodic job at that call, with no offset wait, and the scan may start anywhere in the period. The time recorded as the next run is the end of that period. After boot, API 19–20 makes the same call at the boot and passes the boot plus the stored offset as the first fire. API 21+ registers the periodic job at the boot. This stays off when `cancelScanSchedule` was called. The boot receiver does not scan, and a finished run does not register the next one. `setPeriodic` and `setInexactRepeating` own the repeat.
+API 19–20 calls `setInexactRepeating` at the `scanSchedule` call and passes that call plus one stored offset as the first fire. That delivery is the scan. The offset stays until the count changes. API 21+ registers the periodic job at that call, with no offset wait, and the scan may start anywhere in the period. After boot, API 19–20 makes the same call at the boot and passes the boot plus the stored offset as the first fire. API 21+ leaves the persisted job in place. This stays off when `cancelScanSchedule` was called. The boot receiver does not scan, and a finished run does not register the next one. `setPeriodic` and `setInexactRepeating` own the repeat.
 
 ## Public API (`com.biocatch.poc.scanningbackground.sdk.ScanningSdk`)
 
@@ -97,17 +97,6 @@ API 19–20 calls `setInexactRepeating` at the `scanSchedule` call and passes th
 | --- | --- |
 | `scanSchedule(context, intervals, backendDetectionUrl?)` | Arm 1, 2, or 3 runs in 24 hours. The same count leaves the registration. A different count replaces it. A blank or non-http URL returns without changing the registration, and the scan does not run. |
 | `cancelScanSchedule(context)` | Remove the repeat. Boot does not arm it again until `scanSchedule`. |
-| `start(context)` | Re-applies a stored schedule. Does nothing after `cancelScanSchedule`. |
-| `initialize(context, config?)` | Optional `ScanConfig`, then `scanSchedule`. |
-| `reschedule(context, reason): LogEntry` | Re-arm with the stored count. |
-| `setServerUrl` / `setAutoRenew` | Update settings. A URL alone does not arm the scan. |
-| `history(context): List<LogEntry>` | Recorded runs, newest first. |
-| `clearHistory(context)` | Clear the history and reset the missed-runs count to start from now. |
-| `missedRuns(context, now?): MissedRunsSummary` | Total scheduled runs missed over the whole history (every gap longer than this Android version's tolerance, plus the open one), the number of such gaps, and the longest gap. |
-| `state(context): ScanState` | Snapshot: scheduler, origin, next-run time, interval, server URL, QAP status, last run. |
-
-`ScanConfig` and `ScanState` are plain data classes; `LogEntry` (and its `RunStatus`/`Outcome`/`Trigger`
-enums) are the public data model the host reads to render its own UI.
 
 ## Constraints kept by this module
 

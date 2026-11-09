@@ -42,18 +42,18 @@
 
         <!-- API 21+: runs the scan when the app is closed, after a swipe and after a reboot. -->
         <service
-            android:name="com.biocatch.poc.scanningbackground.services.ScanJobService"
+            android:name="com.biocatch.poc.scanningbackground.scanjobscheduler.ScanJobService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <!-- API 19-20: the AlarmManager fallback, triggered by our own explicit PendingIntent. -->
         <receiver
-            android:name="com.biocatch.poc.scanningbackground.receivers.AlarmReceiver"
+            android:name="com.biocatch.poc.scanningbackground.scanjobschedulerbelow21.AlarmReceiver"
             android:exported="false" />
 
         <!-- BOOT_COMPLETED is a protected broadcast, so only the system can send it here. -->
         <receiver
-            android:name="com.biocatch.poc.scanningbackground.receivers.BootReceiver"
+            android:name="com.biocatch.poc.scanningbackground.scanjobschedulerbelow21.BootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -62,7 +62,7 @@
 
         <!-- Host probe. Same boot broadcast, different class. It does not schedule. -->
         <receiver
-            android:name=".receivers.HostBootReceiver"
+            android:name=".HostBootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

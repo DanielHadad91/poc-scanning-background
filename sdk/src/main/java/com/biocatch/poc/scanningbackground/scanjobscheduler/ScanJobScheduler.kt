@@ -1,4 +1,4 @@
-package com.biocatch.poc.scanningbackground.scheduling
+package com.biocatch.poc.scanningbackground.scanjobscheduler
 
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
@@ -9,15 +9,14 @@ import android.content.Context
 import android.os.Build
 import android.os.PersistableBundle
 import com.biocatch.poc.scanningbackground.model.Trigger
-import com.biocatch.poc.scanningbackground.services.ScanJobService
+import com.biocatch.poc.scanningbackground.scheduling.ScanJobSchedulerContract
 
 /**
  * API 21+. The scheduled scan is one periodic job. The system starts [ScanJobService] in a fresh
  * process when a period is due, including after the app was swiped away, and [JobInfo.Builder.setPersisted]
- * restores that job after reboot. [com.biocatch.poc.scanningbackground.receivers.BootReceiver] then
- * replaces it by registering the periodic job again at the boot. There is no offset wait.
+ * restores that job after reboot. Boot does not register it again. There is no offset wait.
  *
- * The period starts when [schedule] runs. The scan may fall anywhere inside that period.
+ * The period starts when [scan] runs. The scan may fall anywhere inside that period.
  * [com.biocatch.poc.scanningbackground.storage.SettingsStore.nextRunAt] is the end of the current
  * period, not the clock time the system will pick. From API 24 the platform refuses a
  * periodic job shorter than 15 minutes ([JobInfo.getMinPeriodMillis]). This schedule is
@@ -26,8 +25,8 @@ import com.biocatch.poc.scanningbackground.services.ScanJobService
  * a ready network job can also wait for the connectivity batch, up to about 31 minutes, and while the
  * screen is on it may wait until the screen turns off.
  *
- * Calling [schedule] again on [PERIODIC_SCAN_JOB_ID] restarts the period. A finished run must not call it.
- * The repeat belongs to [JobInfo.Builder.setPeriodic]. [cancelPeriodicScan] removes the periodic scan.
+ * Calling [scan] again on [PERIODIC_SCAN_JOB_ID] restarts the period. A finished run must not call it.
+ * The repeat belongs to [JobInfo.Builder.setPeriodic]. [cancelScan] removes the periodic scan.
  * If that job is executing, [android.app.job.JobScheduler.cancel] stops it and ignores
  * [android.app.job.JobService.onStopJob]'s return value, so the job is not put back.
  *
@@ -35,26 +34,26 @@ import com.biocatch.poc.scanningbackground.services.ScanJobService
  * used. Exact repeating alarms are not a JobScheduler feature.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-class ScanJobScheduler(private val context: Context) : ScanScheduler {
+class ScanJobScheduler(private val context: Context) : ScanJobSchedulerContract {
 
     override val name: String = NAME
 
-    override val firstFireUsesStoredOffset: Boolean = false
+    override val usesAlarmOffset: Boolean = false
 
     private val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
 
-    override fun isPeriodicScanPending(): Boolean =
+    override fun isScanExists(): Boolean =
         jobScheduler.allPendingJobs.any { it.id == PERIODIC_SCAN_JOB_ID }
 
     // setPersisted requires RECEIVE_BOOT_COMPLETED, declared by the host app (an SDK declares no permissions).
     @SuppressLint("MissingPermission")
-    override fun schedule(trigger: Trigger, initialDelayMillis: Long, periodMillis: Long): Boolean {
+    override fun scan(trigger: Trigger, initialDelayMillis: Long, periodMillis: Long): Boolean {
         val extras = PersistableBundle().apply { putString(ScanJobService.EXTRA_TRIGGER, trigger.name) }
         val builder = JobInfo.Builder(jobId(trigger), ComponentName(context, ScanJobService::class.java))
             .setExtras(extras)
         when (trigger) {
             // No override deadline: a deadline would start the job without network and lose "send when online".
-            // setPeriodic cannot take a delay. The period starts when this call runs, including after boot.
+            // setPeriodic cannot take a delay. The period starts when this call runs.
             Trigger.PERIODIC_SCAN -> builder
                 .setPeriodic(periodMillis)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -69,7 +68,7 @@ class ScanJobScheduler(private val context: Context) : ScanScheduler {
         }
     }
 
-    override fun cancelPeriodicScan() {
+    override fun cancelScan() {
         jobScheduler.cancel(PERIODIC_SCAN_JOB_ID)
     }
 

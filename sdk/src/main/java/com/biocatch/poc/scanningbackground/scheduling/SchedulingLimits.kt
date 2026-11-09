@@ -1,6 +1,7 @@
 package com.biocatch.poc.scanningbackground.scheduling
 
 import android.os.Build
+import com.biocatch.poc.scanningbackground.scanjobschedulerbelow21.ScanJobSchedulerBelow21
 
 /**
  * The timing guarantee of the active scheduler on this Android version. The scheduled time is always
@@ -54,7 +55,7 @@ object SchedulingLimits {
     }
 
     fun forScheduler(schedulerName: String, sdkInt: Int): TimingLimit =
-        if (schedulerName == AlarmScheduler.NAME) {
+        if (schedulerName == ScanJobSchedulerBelow21.NAME) {
             when {
                 sdkInt < Build.VERSION_CODES.M -> TimingLimit.INEXACT
                 else -> TimingLimit.INEXACT_DEFERRED_IN_DOZE

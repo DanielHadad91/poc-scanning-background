@@ -32,7 +32,7 @@
     <string name="state_next_run">Next run scheduled for %1$s</string>
     <string name="state_not_scheduled">No active schedule right now</string>
     <string name="state_mechanism">Mechanism: %1$s</string>
-    <string name="state_selfheal">On every open the app checks whether the schedule exists, and if not, re-creates it and records that. After the device boots, API 19–20 calls setInexactRepeating at the boot and passes the stored offset as the first fire. That delivery is the scan. API 21+ registers the periodic job at the boot, with no offset wait; the scan may start anywhere in the period. The boot receiver does not scan. A finished run does not schedule the next one: setPeriodic and setInexactRepeating repeat. There is no continuous background watchdog: if the system stops the schedule while the app is closed and there is no boot, it is restored only on the next open.</string>
+    <string name="state_selfheal">On every open the app checks whether the schedule exists, and if not, re-creates it and records that. After the device boots, API 19–20 calls setInexactRepeating at the boot and passes the stored offset as the first fire. That delivery is the scan. API 21+ leaves the persisted job in place. The scan may start anywhere in the period. The boot receiver does not scan. A finished run does not schedule the next one: setPeriodic and setInexactRepeating repeat. There is no continuous background watchdog: if the system stops the schedule while the app is closed and there is no boot, it is restored only on the next open.</string>
     <string name="log_host_boot">Host boot receiver ran. It did not schedule.</string>
 
     <!-- Schedule origin -->

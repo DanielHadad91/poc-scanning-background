@@ -27,8 +27,7 @@ import com.biocatch.poc.scanningbackground.model.RunStatus
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin
 import com.biocatch.poc.scanningbackground.network.WebhookSiteApi
 import com.biocatch.poc.scanningbackground.scan.InstalledAppsScanner
-import com.biocatch.poc.scanningbackground.scheduling.ScanScheduler
-import com.biocatch.poc.scanningbackground.scheduling.ScanScheduling
+import com.biocatch.poc.scanningbackground.scheduling.ScanJobSchedulerContract
 import com.biocatch.poc.scanningbackground.scheduling.SchedulingLimits
 import com.biocatch.poc.scanningbackground.sdk.ScanningSdk
 import com.biocatch.poc.scanningbackground.storage.RunStore
@@ -183,7 +182,7 @@ class MainActivity : LocaleAwareActivity() {
         }
         val entries = runStore.all()
         val scans = entries.filter { it.kind == EntryKind.SCAN }
-        val schedulerName = ScanScheduler.from(this).name
+        val schedulerName = ScanJobSchedulerContract.from(this).name
 
         renderBanner(scans, entries.firstOrNull { it.kind == EntryKind.SCHEDULE }, now)
         renderNextRun(now, schedulerName)
@@ -362,7 +361,7 @@ class MainActivity : LocaleAwareActivity() {
     }
 
     private fun runNow() {
-        toast(getString(if (ScanScheduling.runNow(this)) R.string.toast_run_enqueued else R.string.toast_run_refused))
+        toast(getString(if (ScanJobSchedulerContract.runNow(this)) R.string.toast_run_enqueued else R.string.toast_run_refused))
     }
 
     /** Stays off across leaving the app and across reboot. Apply and schedule turns it back on. */

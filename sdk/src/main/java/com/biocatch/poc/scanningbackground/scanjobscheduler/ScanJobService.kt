@@ -1,11 +1,11 @@
-package com.biocatch.poc.scanningbackground.services
+package com.biocatch.poc.scanningbackground.scanjobscheduler
 
 import android.annotation.TargetApi
 import android.app.job.JobParameters
 import android.app.job.JobService
 import android.os.Build
 import com.biocatch.poc.scanningbackground.model.Trigger
-import com.biocatch.poc.scanningbackground.scheduling.ScanJobScheduler
+import com.biocatch.poc.scanningbackground.scan.ScanRunner
 import kotlin.concurrent.thread
 
 /**

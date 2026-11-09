@@ -24,7 +24,7 @@
   - Schedule existed and kept running in the background
 - Next run scheduled for `{date-time}`  — or, when there is none: No active schedule right now
 - Mechanism: `{JobScheduler | AlarmManager}`
-- On every open the app checks whether the schedule exists, and if not, re-creates it and records that. After the device boots, API 19–20 calls setInexactRepeating at the boot and passes the stored offset as the first fire. That delivery is the scan. API 21+ registers the periodic job at the boot, with no offset wait; the scan may start anywhere in the period. The boot receiver does not scan. A finished run does not schedule the next one: setPeriodic and setInexactRepeating repeat. There is no continuous background watchdog: if the system stops the schedule while the app is closed and there is no boot, it is restored only on the next open.
+- On every open the app checks whether the schedule exists, and if not, re-creates it and records that. After the device boots, API 19–20 calls setInexactRepeating at the boot and passes the stored offset as the first fire. That delivery is the scan. API 21+ leaves the persisted job in place. The scan may start anywhere in the period. The boot receiver does not scan. A finished run does not schedule the next one: setPeriodic and setInexactRepeating repeat. There is no continuous background watchdog: if the system stops the schedule while the app is closed and there is no boot, it is restored only on the next open.
 
 ---
 

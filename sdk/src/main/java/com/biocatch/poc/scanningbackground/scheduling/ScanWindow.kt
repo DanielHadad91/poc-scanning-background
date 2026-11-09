@@ -25,7 +25,7 @@ object ScanWindow {
         val into = floorMod(now - windowStartMillis, periodMillis)
         val phase = floorMod(phaseOffsetMillis, periodMillis)
         val delay = floorMod(phase - into, periodMillis)
-        return if (delay == 0L) periodMillis else delay
+        return delay
     }
 
     private fun floorMod(value: Long, modulus: Long): Long {
