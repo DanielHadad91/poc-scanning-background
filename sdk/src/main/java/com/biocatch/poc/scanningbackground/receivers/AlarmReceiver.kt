@@ -16,7 +16,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val appContext = context.applicationContext
-        val trigger = intent.getStringExtra(EXTRA_TRIGGER)?.let(Trigger::valueOf) ?: Trigger.SCHEDULED
+        val trigger = intent.getStringExtra(EXTRA_TRIGGER)?.let(Trigger::fromStored) ?: Trigger.PERIODIC_SCAN
         // A scheduled alarm is setInexactRepeating, so the next fire is already registered.
 
         val pending = goAsync()

@@ -27,7 +27,7 @@ import com.biocatch.poc.scanningbackground.model.RunStatus
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin
 import com.biocatch.poc.scanningbackground.network.WebhookSiteApi
 import com.biocatch.poc.scanningbackground.scan.InstalledAppsScanner
-import com.biocatch.poc.scanningbackground.scheduling.BackgroundScheduler
+import com.biocatch.poc.scanningbackground.scheduling.ScanScheduler
 import com.biocatch.poc.scanningbackground.scheduling.ScanScheduling
 import com.biocatch.poc.scanningbackground.scheduling.SchedulingLimits
 import com.biocatch.poc.scanningbackground.sdk.ScanningSdk
@@ -183,7 +183,7 @@ class MainActivity : LocaleAwareActivity() {
         }
         val entries = runStore.all()
         val scans = entries.filter { it.kind == EntryKind.SCAN }
-        val schedulerName = BackgroundScheduler.from(this).name
+        val schedulerName = ScanScheduler.from(this).name
 
         renderBanner(scans, entries.firstOrNull { it.kind == EntryKind.SCHEDULE }, now)
         renderNextRun(now, schedulerName)

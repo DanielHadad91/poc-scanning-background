@@ -26,7 +26,22 @@ enum class RunStatus(val outcome: Outcome) {
     SCAN_FAILED(Outcome.FAILED),
 }
 
-enum class Trigger { SCHEDULED, MANUAL }
+enum class Trigger {
+    /** Repeating scan. The system owns the repeat. */
+    PERIODIC_SCAN,
+
+    /** One scan now, beside the repeating scan. */
+    IMMEDIATE_SCAN;
+
+    companion object {
+        /** Earlier builds stored these runs as SCHEDULED and MANUAL. */
+        fun fromStored(name: String): Trigger = when (name) {
+            PERIODIC_SCAN.name, "SCHEDULED" -> PERIODIC_SCAN
+            IMMEDIATE_SCAN.name, "MANUAL" -> IMMEDIATE_SCAN
+            else -> throw IllegalArgumentException("Unknown trigger: $name")
+        }
+    }
+}
 
 /** What an entry records: a scan run, a device boot, or the schedule being (re)armed. */
 enum class EntryKind { SCAN, BOOT, SCHEDULE }
@@ -70,7 +85,7 @@ data class LogEntry(
             kind = EntryKind.valueOf(json.getString("kind")),
             timestamp = json.getLong("timestamp"),
             scheduler = json.getString("scheduler"),
-            trigger = json.stringOrNull("trigger")?.let(Trigger::valueOf),
+            trigger = json.stringOrNull("trigger")?.let(Trigger::fromStored),
             status = json.stringOrNull("status")?.let(RunStatus::valueOf),
             durationMs = if (json.isNull("durationMs")) null else json.getLong("durationMs"),
             appCount = if (json.isNull("appCount")) null else json.getInt("appCount"),

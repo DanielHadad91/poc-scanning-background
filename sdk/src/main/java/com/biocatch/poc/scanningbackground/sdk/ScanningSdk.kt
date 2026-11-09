@@ -6,7 +6,7 @@ import com.biocatch.poc.scanningbackground.model.EntryKind
 import com.biocatch.poc.scanningbackground.model.LogEntry
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin
 import com.biocatch.poc.scanningbackground.scan.InstalledAppsScanner
-import com.biocatch.poc.scanningbackground.scheduling.BackgroundScheduler
+import com.biocatch.poc.scanningbackground.scheduling.ScanScheduler
 import com.biocatch.poc.scanningbackground.scheduling.MissedRuns
 import com.biocatch.poc.scanningbackground.scheduling.MissedRunsSummary
 import com.biocatch.poc.scanningbackground.scheduling.ScanScheduling
@@ -92,7 +92,7 @@ object ScanningSdk {
      * A scan that has already started is not aborted. The next [scanSchedule] arms it again.
      */
     fun cancelScanSchedule(context: Context) {
-        BackgroundScheduler.from(context).cancelScheduled()
+        ScanScheduler.from(context).cancelPeriodicScan()
         val settings = SettingsStore(context)
         settings.nextRunAt = 0L
         settings.armedIntervals = 0
@@ -145,7 +145,7 @@ object ScanningSdk {
         val settings = SettingsStore(context)
         val lastRun = RunStore(context).all().firstOrNull { it.kind == EntryKind.SCAN }
         return ScanState(
-            schedulerName = BackgroundScheduler.from(context).name,
+            schedulerName = ScanScheduler.from(context).name,
             scheduleOrigin = settings.scheduleOrigin,
             nextRunAt = settings.nextRunAt,
             intervalMinutes = settings.intervalMinutes,
@@ -167,7 +167,7 @@ object ScanningSdk {
         val entry = LogEntry(
             kind = EntryKind.SCHEDULE,
             timestamp = System.currentTimeMillis(),
-            scheduler = BackgroundScheduler.from(context).name,
+            scheduler = ScanScheduler.from(context).name,
             message = message,
         )
         RunStore(context).append(entry)

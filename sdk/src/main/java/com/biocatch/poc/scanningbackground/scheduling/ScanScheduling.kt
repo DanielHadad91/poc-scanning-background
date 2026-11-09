@@ -20,14 +20,14 @@ object ScanScheduling {
      * re-creation is marked [ScheduleOrigin.RECREATED_ON_REENTRY].
      */
     fun ensureScheduled(context: Context): LogEntry? {
-        val scheduler = BackgroundScheduler.from(context)
+        val scheduler = ScanScheduler.from(context)
         val settings = SettingsStore(context)
         val intervals = settings.intervals
-        if (scheduler.isScheduled() && settings.armedIntervals == intervals) {
+        if (scheduler.isPeriodicScanPending() && settings.armedIntervals == intervals) {
             settings.scheduleOrigin = ScheduleOrigin.EXISTING_ON_OPEN
             return null
         }
-        val intervalChanged = scheduler.isScheduled()
+        val intervalChanged = scheduler.isPeriodicScanPending()
         val recovering = settings.nextRunAt > 0L
         val origin = when {
             intervalChanged -> ScheduleOrigin.INTERVAL_CHANGED
@@ -48,8 +48,8 @@ object ScanScheduling {
      * registers the periodic job at the boot, with no offset wait.
      */
     fun reschedule(context: Context, reason: String, origin: ScheduleOrigin): LogEntry {
-        val scheduler = BackgroundScheduler.from(context)
-        scheduler.cancelScheduled()
+        val scheduler = ScanScheduler.from(context)
+        scheduler.cancelPeriodicScan()
         val nextRunAt = armNext(context, scheduler, origin)
         val entry = LogEntry(
             kind = EntryKind.SCHEDULE,
@@ -63,10 +63,10 @@ object ScanScheduling {
         return entry
     }
 
-    fun runNow(context: Context): Boolean = BackgroundScheduler.from(context).schedule(Trigger.MANUAL, 0, 0)
+    fun runNow(context: Context): Boolean = ScanScheduler.from(context).schedule(Trigger.IMMEDIATE_SCAN, 0, 0)
 
     /** Returns the recorded next-run time, or null if the system refused it. */
-    private fun armNext(context: Context, scheduler: BackgroundScheduler, origin: ScheduleOrigin): Long? {
+    private fun armNext(context: Context, scheduler: ScanScheduler, origin: ScheduleOrigin): Long? {
         val settings = SettingsStore(context)
         val intervals = settings.intervals
         if (!ScanWindow.isValid(intervals)) {
@@ -78,18 +78,17 @@ object ScanScheduling {
         val now = System.currentTimeMillis()
         // API 19–20 aims the alarm at one offset inside the period. That delivery is the scan.
         // API 21+ has no offset: setPeriodic starts now, and the scan may fall anywhere in the period.
-        val alarmAimedAtOffset = scheduler.name != JobSchedulerScheduler.NAME
-        val initialDelayMillis = if (alarmAimedAtOffset) {
+        val initialDelayMillis = if (scheduler.firstFireUsesStoredOffset) {
             alarmOffsetDelay(settings, intervals, periodMillis, now, origin)
         } else {
             0L
         }
-        if (!scheduler.schedule(Trigger.SCHEDULED, initialDelayMillis, periodMillis)) {
+        if (!scheduler.schedule(Trigger.PERIODIC_SCAN, initialDelayMillis, periodMillis)) {
             settings.nextRunAt = 0L
             settings.armedIntervals = 0
             return null
         }
-        val nextRunAt = if (alarmAimedAtOffset) now + initialDelayMillis else now + periodMillis
+        val nextRunAt = if (scheduler.firstFireUsesStoredOffset) now + initialDelayMillis else now + periodMillis
         settings.nextRunAt = nextRunAt
         settings.armedIntervals = intervals
         settings.scheduleOrigin = origin

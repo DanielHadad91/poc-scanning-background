@@ -15,7 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.biocatch.poc.scanningbackground.R
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin
-import com.biocatch.poc.scanningbackground.scheduling.BackgroundScheduler
+import com.biocatch.poc.scanningbackground.scheduling.ScanScheduler
 import com.biocatch.poc.scanningbackground.storage.SettingsStore
 
 /**
@@ -99,7 +99,7 @@ class LimitsActivity : LocaleAwareActivity() {
             } else {
                 getString(R.string.state_not_scheduled)
             },
-            getString(R.string.state_mechanism, BackgroundScheduler.from(this).name),
+            getString(R.string.state_mechanism, ScanScheduler.from(this).name),
             getString(R.string.state_selfheal),
         )
         val tone = when (origin) {

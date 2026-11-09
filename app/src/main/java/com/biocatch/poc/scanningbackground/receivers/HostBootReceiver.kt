@@ -6,7 +6,7 @@ import android.content.Intent
 import com.biocatch.poc.scanningbackground.R
 import com.biocatch.poc.scanningbackground.model.EntryKind
 import com.biocatch.poc.scanningbackground.model.LogEntry
-import com.biocatch.poc.scanningbackground.scheduling.BackgroundScheduler
+import com.biocatch.poc.scanningbackground.scheduling.ScanScheduler
 import com.biocatch.poc.scanningbackground.storage.RunStore
 
 /**
@@ -23,7 +23,7 @@ class HostBootReceiver : BroadcastReceiver() {
             LogEntry(
                 kind = EntryKind.BOOT,
                 timestamp = System.currentTimeMillis(),
-                scheduler = BackgroundScheduler.from(appContext).name,
+                scheduler = ScanScheduler.from(appContext).name,
                 message = appContext.getString(R.string.log_host_boot),
             )
         )

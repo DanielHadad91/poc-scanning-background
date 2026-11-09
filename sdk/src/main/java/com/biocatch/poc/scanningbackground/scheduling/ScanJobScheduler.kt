@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
  * screen is on it may wait until the screen turns off.
  *
  * Calling [schedule] again on [PERIODIC_SCAN_JOB_ID] restarts the period. A finished run must not call it.
- * The repeat belongs to [JobInfo.Builder.setPeriodic]. [cancelScheduled] removes the periodic scan.
+ * The repeat belongs to [JobInfo.Builder.setPeriodic]. [cancelPeriodicScan] removes the periodic scan.
  * If that job is executing, [android.app.job.JobScheduler.cancel] stops it and ignores
  * [android.app.job.JobService.onStopJob]'s return value, so the job is not put back.
  *
@@ -34,13 +34,15 @@ import java.util.concurrent.TimeUnit
  * used. Exact repeating alarms are not a JobScheduler feature.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler {
+class ScanJobScheduler(private val context: Context) : ScanScheduler {
 
     override val name: String = NAME
 
+    override val firstFireUsesStoredOffset: Boolean = false
+
     private val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
 
-    override fun isScheduled(): Boolean =
+    override fun isPeriodicScanPending(): Boolean =
         jobScheduler.allPendingJobs.any { it.id == PERIODIC_SCAN_JOB_ID }
 
     // setPersisted requires RECEIVE_BOOT_COMPLETED, declared by the host app (an SDK declares no permissions).
@@ -52,12 +54,12 @@ class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler 
         when (trigger) {
             // No override deadline: a deadline would start the job without network and lose "send when online".
             // setPeriodic cannot take a delay. The period starts when this call runs, including after boot.
-            Trigger.SCHEDULED -> builder
+            Trigger.PERIODIC_SCAN -> builder
                 .setPeriodic(enforcedPeriodMillis(periodMillis))
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPersisted(true)
             // No network constraint, so being offline shows up right away as a failed run.
-            Trigger.MANUAL -> builder.setOverrideDeadline(0)
+            Trigger.IMMEDIATE_SCAN -> builder.setOverrideDeadline(0)
         }
         return try {
             jobScheduler.schedule(builder.build()) == JobScheduler.RESULT_SUCCESS
@@ -66,7 +68,7 @@ class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler 
         }
     }
 
-    override fun cancelScheduled() {
+    override fun cancelPeriodicScan() {
         jobScheduler.cancel(PERIODIC_SCAN_JOB_ID)
     }
 
@@ -78,8 +80,8 @@ class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler 
     }
 
     private fun jobId(trigger: Trigger): Int = when (trigger) {
-        Trigger.SCHEDULED -> PERIODIC_SCAN_JOB_ID
-        Trigger.MANUAL -> IMMEDIATE_SCAN_JOB_ID
+        Trigger.PERIODIC_SCAN -> PERIODIC_SCAN_JOB_ID
+        Trigger.IMMEDIATE_SCAN -> IMMEDIATE_SCAN_JOB_ID
     }
 
     companion object {

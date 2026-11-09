@@ -19,21 +19,23 @@ import com.biocatch.poc.scanningbackground.receivers.AlarmReceiver
  * scan. A finished run does not register the next fire.
  * There is no network constraint: an offline run is recorded and the next repeat tries again.
  *
- * [cancelScheduled] removes the repeating alarm. A scan that has already started in the receiver
+ * [cancelPeriodicScan] removes the repeating alarm. A scan that has already started in the receiver
  * keeps running.
  */
-class AlarmScheduler(private val context: Context) : BackgroundScheduler {
+class AlarmScheduler(private val context: Context) : ScanScheduler {
 
     override val name: String = NAME
 
+    override val firstFireUsesStoredOffset: Boolean = true
+
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    override fun isScheduled(): Boolean =
-        pendingIntent(Trigger.SCHEDULED, PendingIntent.FLAG_NO_CREATE, oneShot = false) != null
+    override fun isPeriodicScanPending(): Boolean =
+        pendingIntent(Trigger.PERIODIC_SCAN, PendingIntent.FLAG_NO_CREATE, oneShot = false) != null
 
     @SuppressLint("MissingPermission")
     override fun schedule(trigger: Trigger, initialDelayMillis: Long, periodMillis: Long): Boolean {
-        val repeating = trigger == Trigger.SCHEDULED
+        val repeating = trigger == Trigger.PERIODIC_SCAN
         val operation = pendingIntent(trigger, PendingIntent.FLAG_UPDATE_CURRENT, oneShot = !repeating) ?: return false
         val triggerAt = System.currentTimeMillis() + initialDelayMillis
         if (repeating) {
@@ -50,8 +52,8 @@ class AlarmScheduler(private val context: Context) : BackgroundScheduler {
         return true
     }
 
-    override fun cancelScheduled() {
-        pendingIntent(Trigger.SCHEDULED, PendingIntent.FLAG_NO_CREATE, oneShot = false)?.let {
+    override fun cancelPeriodicScan() {
+        pendingIntent(Trigger.PERIODIC_SCAN, PendingIntent.FLAG_NO_CREATE, oneShot = false)?.let {
             alarmManager.cancel(it)
             it.cancel()
         }
@@ -61,13 +63,15 @@ class AlarmScheduler(private val context: Context) : BackgroundScheduler {
         val intent = Intent(context, AlarmReceiver::class.java).putExtra(AlarmReceiver.EXTRA_TRIGGER, trigger.name)
         val immutable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         val oneShotFlag = if (oneShot) PendingIntent.FLAG_ONE_SHOT else 0
-        val requestCode = if (trigger == Trigger.SCHEDULED) REQUEST_SCHEDULED else REQUEST_MANUAL
+        val requestCode = if (trigger == Trigger.PERIODIC_SCAN) PERIODIC_SCAN_REQUEST_CODE else IMMEDIATE_SCAN_REQUEST_CODE
         return PendingIntent.getBroadcast(context, requestCode, intent, flags or immutable or oneShotFlag)
     }
 
     companion object {
         const val NAME = "AlarmManager"
-        private const val REQUEST_SCHEDULED = 2001
-        private const val REQUEST_MANUAL = 2002
+        /** Repeating scan. setInexactRepeating owns the repeat. */
+        private const val PERIODIC_SCAN_REQUEST_CODE = 2001
+        /** One scan now, beside the repeating scan. */
+        private const val IMMEDIATE_SCAN_REQUEST_CODE = 2002
     }
 }

@@ -7,7 +7,7 @@ import com.biocatch.poc.scanningbackground.sdk.R
 import com.biocatch.poc.scanningbackground.model.EntryKind
 import com.biocatch.poc.scanningbackground.model.LogEntry
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin
-import com.biocatch.poc.scanningbackground.scheduling.BackgroundScheduler
+import com.biocatch.poc.scanningbackground.scheduling.ScanScheduler
 import com.biocatch.poc.scanningbackground.scheduling.ScanScheduling
 import com.biocatch.poc.scanningbackground.storage.RunStore
 import com.biocatch.poc.scanningbackground.storage.SettingsStore
@@ -30,7 +30,7 @@ class BootReceiver : BroadcastReceiver() {
             LogEntry(
                 kind = EntryKind.BOOT,
                 timestamp = System.currentTimeMillis(),
-                scheduler = BackgroundScheduler.from(appContext).name,
+                scheduler = ScanScheduler.from(appContext).name,
                 message = appContext.getString(R.string.log_boot),
             )
         )
@@ -39,7 +39,7 @@ class BootReceiver : BroadcastReceiver() {
                 LogEntry(
                     kind = EntryKind.SCHEDULE,
                     timestamp = System.currentTimeMillis(),
-                    scheduler = BackgroundScheduler.from(appContext).name,
+                    scheduler = ScanScheduler.from(appContext).name,
                     message = appContext.getString(R.string.log_boot_cancelled),
                 )
             )

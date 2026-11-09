@@ -12,7 +12,7 @@ An integrating app ships its own UI and wires the SDK through two things only: i
 | Background service `ScanJobService` (JobScheduler, API 21+) | Code ✔ | Manifest `<service>` entry ✔ |
 | `AlarmReceiver` (AlarmManager fallback, API 19–20) | Code ✔ | Manifest `<receiver>` entry ✔ |
 | `BootReceiver` (re-arm after reboot) | Code ✔ | Manifest `<receiver>` + `BOOT_COMPLETED` filter ✔ |
-| Scheduling (`ScanScheduling`, `BackgroundScheduler`), scanning, networking/TLS, storage, data models | Code ✔ | — |
+| Scheduling (`ScanScheduling`, `ScanScheduler`), scanning, networking/TLS, storage, data models | Code ✔ | — |
 | Permissions (`INTERNET`, `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED`, `QUERY_ALL_PACKAGES`) | — | `<uses-permission>` entries ✔ |
 | UI / Activities / strings / layouts | — (SDK has none) | All of it ✔ |
 | Entry call to start scanning | `ScanningSdk` facade ✔ | One `ScanningSdk.initialize(...)` call ✔ |

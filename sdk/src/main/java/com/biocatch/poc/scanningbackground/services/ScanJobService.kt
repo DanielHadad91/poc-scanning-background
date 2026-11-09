@@ -5,7 +5,7 @@ import android.app.job.JobParameters
 import android.app.job.JobService
 import android.os.Build
 import com.biocatch.poc.scanningbackground.model.Trigger
-import com.biocatch.poc.scanningbackground.scheduling.JobSchedulerScheduler
+import com.biocatch.poc.scanningbackground.scheduling.ScanJobScheduler
 import kotlin.concurrent.thread
 
 /**
@@ -16,9 +16,9 @@ import kotlin.concurrent.thread
 class ScanJobService : JobService() {
 
     override fun onStartJob(params: JobParameters): Boolean {
-        val trigger = params.extras.getString(EXTRA_TRIGGER)?.let(Trigger::valueOf) ?: Trigger.SCHEDULED
+        val trigger = params.extras.getString(EXTRA_TRIGGER)?.let(Trigger::fromStored) ?: Trigger.PERIODIC_SCAN
         thread(name = "scan-job") {
-            ScanRunner(applicationContext).run(trigger, JobSchedulerScheduler.NAME)
+            ScanRunner(applicationContext).run(trigger, ScanJobScheduler.NAME)
             // Scheduling the periodic scan again would restart the period. setPeriodic already repeats.
             jobFinished(params, false)
         }
@@ -27,7 +27,8 @@ class ScanJobService : JobService() {
 
     /** A periodic scan stopped by the system is retried. An immediate scan is not. */
     override fun onStopJob(params: JobParameters): Boolean {
-        return params.extras.getString(EXTRA_TRIGGER) != Trigger.MANUAL.name
+        val stored = params.extras.getString(EXTRA_TRIGGER)
+        return stored?.let(Trigger::fromStored) != Trigger.IMMEDIATE_SCAN
     }
 
     companion object {

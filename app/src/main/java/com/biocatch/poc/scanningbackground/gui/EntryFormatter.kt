@@ -110,7 +110,7 @@ class EntryFormatter(private val context: Context) {
     )
 
     fun triggerLabel(trigger: Trigger?): String =
-        context.getString(if (trigger == Trigger.MANUAL) R.string.trigger_manual else R.string.trigger_scheduled)
+        context.getString(if (trigger == Trigger.IMMEDIATE_SCAN) R.string.trigger_manual else R.string.trigger_scheduled)
 
     fun explanation(status: RunStatus): String = context.getString(
         when (status) {

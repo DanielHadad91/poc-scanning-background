@@ -76,7 +76,7 @@ object MissedRuns {
     }
 
     private fun isChainAnchor(entry: LogEntry): Boolean = when (entry.kind) {
-        EntryKind.SCAN -> entry.trigger != Trigger.MANUAL
+        EntryKind.SCAN -> entry.trigger != Trigger.IMMEDIATE_SCAN
         EntryKind.SCHEDULE -> entry.nextRunAt != null
         EntryKind.BOOT -> false
     }
