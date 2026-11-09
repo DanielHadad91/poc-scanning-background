@@ -12,7 +12,7 @@ import com.biocatch.poc.scanningbackground.storage.RunStore
 /**
  * Second BOOT_COMPLETED receiver, owned by the host. It records that it ran and does not schedule.
  * Android delivers the boot broadcast to this receiver and to the SDK [com.biocatch.poc.scanningbackground.receivers.BootReceiver].
- * Neither cancels the other. This receiver does not schedule job 1001, job 1003, or alarm request 2001.
+ * Neither cancels the other. This receiver does not schedule the periodic scan or the repeating alarm.
  */
 class HostBootReceiver : BroadcastReceiver() {
 

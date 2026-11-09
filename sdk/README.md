@@ -99,7 +99,6 @@ API 19–20 calls `setInexactRepeating` at the `scanSchedule` call and passes th
 | `cancelScanSchedule(context)` | Remove the repeat. Boot does not arm it again until `scanSchedule`. |
 | `start(context)` | Re-applies a stored schedule. Does nothing after `cancelScanSchedule`. |
 | `initialize(context, config?)` | Optional `ScanConfig`, then `scanSchedule`. |
-| `runNow(context): Boolean` | Run one scan now, off-cycle. |
 | `reschedule(context, reason): LogEntry` | Re-arm with the stored count. |
 | `setServerUrl` / `setAutoRenew` | Update settings. A URL alone does not arm the scan. |
 | `history(context): List<LogEntry>` | Recorded runs, newest first. |

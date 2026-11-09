@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.PersistableBundle
 import com.biocatch.poc.scanningbackground.model.Trigger
 import com.biocatch.poc.scanningbackground.services.ScanJobService
-import com.biocatch.poc.scanningbackground.storage.SettingsStore
 import java.util.concurrent.TimeUnit
 
 /**
@@ -26,9 +25,9 @@ import java.util.concurrent.TimeUnit
  * a ready network job can also wait for the connectivity batch, up to about 31 minutes, and while the
  * screen is on it may wait until the screen turns off.
  *
- * Calling [schedule] again on [SCHEDULED_JOB_ID] restarts the period. A finished run must not call it.
- * The repeat belongs to [JobInfo.Builder.setPeriodic]. [cancelScheduled] removes the periodic job and a leftover registration job from an older build. If the periodic job is
- * executing, [android.app.job.JobScheduler.cancel] stops it and ignores
+ * Calling [schedule] again on [PERIODIC_SCAN_JOB_ID] restarts the period. A finished run must not call it.
+ * The repeat belongs to [JobInfo.Builder.setPeriodic]. [cancelScheduled] removes the periodic scan.
+ * If that job is executing, [android.app.job.JobScheduler.cancel] stops it and ignores
  * [android.app.job.JobService.onStopJob]'s return value, so the job is not put back.
  *
  * WorkManager's periodic work is the same JobScheduler job plus an AndroidX dependency, so it is not
@@ -41,28 +40,8 @@ class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler 
 
     private val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
 
-    override fun isScheduled(): Boolean = hasPeriodicJob()
-
-    /** True when the periodic scan job itself is pending. The registration job does not count. */
-    fun hasPeriodicJob(): Boolean = jobScheduler.allPendingJobs.any { it.id == SCHEDULED_JOB_ID }
-
-    /**
-     * Called by the registration job. Registers the periodic scan at this moment.
-     * Returns false only when the system refused and the registration should be retried.
-     */
-    fun registerPeriodic(): Boolean {
-        val settings = SettingsStore(context)
-        if (settings.scheduleCancelled || !ScanWindow.isValid(settings.intervals)) return true
-        if (hasPeriodicJob()) return true
-        val periodMillis = ScanWindow.periodMillis(settings.intervals)
-        if (!schedule(Trigger.SCHEDULED, 0L, periodMillis)) return false
-        if (SettingsStore(context).scheduleCancelled) {
-            cancelScheduled()
-            return true
-        }
-        settings.nextRunAt = System.currentTimeMillis() + periodMillis
-        return true
-    }
+    override fun isScheduled(): Boolean =
+        jobScheduler.allPendingJobs.any { it.id == PERIODIC_SCAN_JOB_ID }
 
     // setPersisted requires RECEIVE_BOOT_COMPLETED, declared by the host app (an SDK declares no permissions).
     @SuppressLint("MissingPermission")
@@ -77,11 +56,6 @@ class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler 
                 .setPeriodic(enforcedPeriodMillis(periodMillis))
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPersisted(true)
-            // Leftover from builds that waited an offset before setPeriodic. New arms do not post this job.
-            // Not persisted: a reboot drops it, and the boot receiver registers the periodic job directly.
-            Trigger.REGISTER -> builder
-                .setMinimumLatency(initialDelayMillis)
-                .setOverrideDeadline(initialDelayMillis)
             // No network constraint, so being offline shows up right away as a failed run.
             Trigger.MANUAL -> builder.setOverrideDeadline(0)
         }
@@ -93,8 +67,7 @@ class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler 
     }
 
     override fun cancelScheduled() {
-        jobScheduler.cancel(SCHEDULED_JOB_ID)
-        jobScheduler.cancel(REGISTER_JOB_ID)
+        jobScheduler.cancel(PERIODIC_SCAN_JOB_ID)
     }
 
     /** API 24+ raises a shorter period to 15 minutes. Earlier releases accept the given period. */
@@ -105,15 +78,15 @@ class JobSchedulerScheduler(private val context: Context) : BackgroundScheduler 
     }
 
     private fun jobId(trigger: Trigger): Int = when (trigger) {
-        Trigger.SCHEDULED -> SCHEDULED_JOB_ID
-        Trigger.MANUAL -> MANUAL_JOB_ID
-        Trigger.REGISTER -> REGISTER_JOB_ID
+        Trigger.SCHEDULED -> PERIODIC_SCAN_JOB_ID
+        Trigger.MANUAL -> IMMEDIATE_SCAN_JOB_ID
     }
 
     companion object {
         const val NAME = "JobScheduler"
-        private const val SCHEDULED_JOB_ID = 1001
-        private const val MANUAL_JOB_ID = 1002
-        private const val REGISTER_JOB_ID = 1003
+        /** Repeating scan. setPeriodic owns the repeat. */
+        private const val PERIODIC_SCAN_JOB_ID = 1001
+        /** One scan now, beside the periodic scan. */
+        private const val IMMEDIATE_SCAN_JOB_ID = 1002
     }
 }
