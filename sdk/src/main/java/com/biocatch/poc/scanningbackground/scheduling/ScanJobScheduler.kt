@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.PersistableBundle
 import com.biocatch.poc.scanningbackground.model.Trigger
 import com.biocatch.poc.scanningbackground.services.ScanJobService
-import java.util.concurrent.TimeUnit
 
 /**
  * API 21+. The scheduled scan is one periodic job. The system starts [ScanJobService] in a fresh
@@ -20,8 +19,10 @@ import java.util.concurrent.TimeUnit
  *
  * The period starts when [schedule] runs. The scan may fall anywhere inside that period.
  * [com.biocatch.poc.scanningbackground.storage.SettingsStore.nextRunAt] is the end of the current
- * period, not the clock time the system will pick. From API 24 a period
- * shorter than [SchedulingLimits.PERIODIC_MIN_MINUTES] is raised to that floor. From Android 15 (API 35)
+ * period, not the clock time the system will pick. From API 24 the platform refuses a
+ * periodic job shorter than 15 minutes ([JobInfo.getMinPeriodMillis]). This schedule is
+ * 1, 2, or 3 runs in 24 hours, so the period is 24, 12, or 8 hours and cannot reach that
+ * floor. The SDK does not check it. From Android 15 (API 35)
  * a ready network job can also wait for the connectivity batch, up to about 31 minutes, and while the
  * screen is on it may wait until the screen turns off.
  *
@@ -55,7 +56,7 @@ class ScanJobScheduler(private val context: Context) : ScanScheduler {
             // No override deadline: a deadline would start the job without network and lose "send when online".
             // setPeriodic cannot take a delay. The period starts when this call runs, including after boot.
             Trigger.PERIODIC_SCAN -> builder
-                .setPeriodic(enforcedPeriodMillis(periodMillis))
+                .setPeriodic(periodMillis)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPersisted(true)
             // No network constraint, so being offline shows up right away as a failed run.
@@ -70,13 +71,6 @@ class ScanJobScheduler(private val context: Context) : ScanScheduler {
 
     override fun cancelPeriodicScan() {
         jobScheduler.cancel(PERIODIC_SCAN_JOB_ID)
-    }
-
-    /** API 24+ raises a shorter period to 15 minutes. Earlier releases accept the given period. */
-    private fun enforcedPeriodMillis(periodMillis: Long): Long {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return periodMillis
-        val floor = TimeUnit.MINUTES.toMillis(SchedulingLimits.PERIODIC_MIN_MINUTES.toLong())
-        return periodMillis.coerceAtLeast(floor)
     }
 
     private fun jobId(trigger: Trigger): Int = when (trigger) {

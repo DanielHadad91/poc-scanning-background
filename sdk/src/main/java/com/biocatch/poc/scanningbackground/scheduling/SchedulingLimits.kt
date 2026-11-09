@@ -35,12 +35,12 @@ object SchedulingLimits {
      */
     const val CONNECTIVITY_BATCH_MAX_DELAY_MINUTES = 31L
 
-    /**
-     * The minimum period Android enforces for a periodic JobScheduler job from API 24
-     * (JobInfo.getMinPeriodMillis). A shorter period is raised to this. setInexactRepeating has no
-     * matching floor. Three runs in 24 hours is an 8-hour gap, so this floor does not shorten that schedule.
+    /*
+     * From API 24 a periodic JobScheduler job cannot be shorter than 15 minutes
+     * (JobInfo.getMinPeriodMillis). setInexactRepeating has no matching floor.
+     * One, two, or three runs in 24 hours is 24, 12, or 8 hours, so this schedule
+     * cannot reach that floor and the SDK does not check it.
      */
-    const val PERIODIC_MIN_MINUTES = 15
 
     /**
      * How late a run may be before we count it as missed. Android does not guarantee a maximum delay

@@ -11,7 +11,10 @@ object ScanWindow {
 
     fun isValid(intervals: Int): Boolean = intervals in MIN_INTERVALS..MAX_INTERVALS
 
-    /** 24 h, 12 h, or 8 h. All three are above the 15-minute periodic-job floor. */
+    /**
+     * 24 h, 12 h, or 8 h. The shortest is 8 hours, so none of these reach the 15-minute
+     * periodic-job floor. The SDK does not check that floor.
+     */
     fun periodMillis(intervals: Int): Long = TimeUnit.HOURS.toMillis(HOURS.toLong()) / intervals
 
     /**
