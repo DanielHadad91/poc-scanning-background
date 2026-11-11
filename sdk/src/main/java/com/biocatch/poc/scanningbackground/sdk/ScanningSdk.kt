@@ -23,7 +23,7 @@ object ScanningSdk {
      * fall anywhere in the period. After boot, API 19–20 registers the alarm again at the boot plus
      * the stored offset. API 21+ leaves the persisted job in place.
      */
-    fun scanSchedule(context: Context, intervals: Int, backendDetectionUrl: String? = null) {
+    fun scheduleScan(context: Context, intervals: Int, backendDetectionUrl: String? = null) {
         val settings = SettingsStore(context)
         val url = resolveUrl(settings, backendDetectionUrl) ?: return
         if (!ScanWindow.isValid(intervals)) {
@@ -33,15 +33,15 @@ object ScanningSdk {
         if (backendDetectionUrl != null) settings.serverUrl = url
         settings.intervals = intervals
         settings.scheduleCancelled = false
-        ScanJobSchedulerContract.ensureScheduled(context)
+        ScanJobSchedulerContract.ensureScheduledScan(context)
     }
 
     /**
      * Removes the periodic job or the repeating alarm. The schedule stays off across reboot and
-     * across opening the app, until the next [scanSchedule].
+     * across opening the app, until the next [scheduleScan].
      */
-    fun cancelScanSchedule(context: Context) {
-        ScanJobSchedulerContract.from(context).cancelScan()
+    fun cancelScheduledScan(context: Context) {
+        ScanJobSchedulerContract.from(context).cancelScheduledScan()
         val settings = SettingsStore(context)
         settings.nextRunAt = 0L
         settings.armedIntervals = 0

@@ -17,23 +17,18 @@ import java.util.Random
  * the system owns the repeat, and the time between fires can move. [AlarmManager.setRepeating] is the
  * same inexact mechanism since API 19 and is deprecated, so it is not used. Alarms survive swipe-away
  * but not reboot, so [BootReceiver] calls [AlarmManager.setInexactRepeating] again at the boot. The
- * first-fire time passed in is the boot plus the stored offset. That delivery is the scan. A finished
+ * first fire is the boot plus the stored offset. That delivery is the scan. A finished
  * run does not register the next fire. There is no network constraint: an offline run is recorded by
  * the upload failing, and the next repeat tries again. [AlarmManager.setInexactRepeating] has no
  * 15-minute floor.
  *
- * [cancelScan] removes the repeating alarm. A scan that has already started in the receiver keeps running.
+ * [cancelScheduledScan] removes the repeating alarm. A scan that has already started in the receiver keeps running.
  */
 internal class ScanJobSchedulerBelow21(private val context: Context) : ScanJobSchedulerContract {
 
     override val name: String = NAME
 
-    override val usesAlarmOffset: Boolean = true
-
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-    override fun periodicStartDelayMillis(intervals: Int, periodMillis: Long, now: Long, afterBoot: Boolean): Long =
-        alarmOffsetDelay(SettingsStore(context), intervals, periodMillis, now, afterBoot)
 
     /** Delay until the stored alarm offset. A new count rolls a new offset and keeps it until the count changes. */
     private fun alarmOffsetDelay(
@@ -60,15 +55,15 @@ internal class ScanJobSchedulerBelow21(private val context: Context) : ScanJobSc
         )
     }
 
-    override fun isScanExists(): Boolean =
+    override fun isScanScheduled(): Boolean =
         pendingIntent(Trigger.PERIODIC_SCAN, PendingIntent.FLAG_NO_CREATE, oneShot = false) != null
 
     @SuppressLint("MissingPermission")
-    override fun scan(initialDelayMillis: Long, periodMillis: Long): Boolean {
-        val operation = pendingIntent(Trigger.PERIODIC_SCAN, PendingIntent.FLAG_UPDATE_CURRENT, oneShot = false) ?: return false
-        val triggerAt = System.currentTimeMillis() + initialDelayMillis
+    override fun scheduleScan(intervals: Int, periodMillis: Long, now: Long, afterBoot: Boolean): Long? {
+        val operation = pendingIntent(Trigger.PERIODIC_SCAN, PendingIntent.FLAG_UPDATE_CURRENT, oneShot = false) ?: return null
+        val triggerAt = now + alarmOffsetDelay(SettingsStore(context), intervals, periodMillis, now, afterBoot)
         alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, triggerAt, periodMillis, operation)
-        return true
+        return triggerAt
     }
 
     @SuppressLint("MissingPermission")
@@ -83,7 +78,7 @@ internal class ScanJobSchedulerBelow21(private val context: Context) : ScanJobSc
         return true
     }
 
-    override fun cancelScan() {
+    override fun cancelScheduledScan() {
         pendingIntent(Trigger.PERIODIC_SCAN, PendingIntent.FLAG_NO_CREATE, oneShot = false)?.let {
             alarmManager.cancel(it)
             it.cancel()

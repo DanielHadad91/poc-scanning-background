@@ -116,7 +116,7 @@ class MainActivity : LocaleAwareActivity() {
         setUpDeviceCard()
 
         if (settings.intervals in 1..3) {
-            ScanningSdk.scanSchedule(this, settings.intervals, null)
+            ScanningSdk.scheduleScan(this, settings.intervals, null)
         }
     }
 
@@ -375,7 +375,7 @@ class MainActivity : LocaleAwareActivity() {
 
     /** Stays off across leaving the app and across reboot. Apply and schedule turns it back on. */
     private fun cancelArmedSchedule() {
-        ScanningSdk.cancelScanSchedule(this)
+        ScanningSdk.cancelScheduledScan(this)
         toast(getString(R.string.toast_schedule_cancelled))
         render()
     }
@@ -388,7 +388,7 @@ class MainActivity : LocaleAwareActivity() {
         }
         hideKeyboard()
         val url = serverUrl.text.toString().trim()
-        ScanningSdk.scanSchedule(this, intervals, url)
+        ScanningSdk.scheduleScan(this, intervals, url)
         val nextRunAt = settings.nextRunAt
         toast(
             if (nextRunAt > 0L) {

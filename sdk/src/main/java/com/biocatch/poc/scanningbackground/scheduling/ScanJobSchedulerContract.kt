@@ -18,34 +18,28 @@ import com.biocatch.poc.scanningbackground.storage.SettingsStore
  */
 internal interface ScanJobSchedulerContract {
 
-    /** Platform mechanism, stored on each history line. "JobScheduler" or "AlarmManager". */
+    /** POC only. Mechanism name stored on each history line. "JobScheduler" or "AlarmManager". */
     val name: String
 
-    /** True for the alarm. Its first fire waits for the stored offset. False for the periodic job. */
-    val usesAlarmOffset: Boolean
-
     /** True when the repeating scan is pending. */
-    fun isScanExists(): Boolean
+    fun isScanScheduled(): Boolean
 
     /**
-     * Arms the repeating scan. The alarm adds [initialDelayMillis] to now as the first-fire time.
-     * That delivery is the scan. After boot that delay is the stored offset counted from the boot.
-     * The periodic job ignores [initialDelayMillis]: the period starts when this call runs, and the
-     * scan may fall anywhere in the period. Returns false if the system refused it.
+     * Arms the repeating scan. Returns the recorded next-run time, or null if the system refused it.
+     * The alarm chooses its first-fire offset. That delivery is the scan. After boot the offset is the
+     * stored one, counted from [now]. The periodic job starts its period when this call runs. The scan
+     * may fall anywhere in that period, and the returned time is the end of the period.
      */
-    fun scan(initialDelayMillis: Long, periodMillis: Long): Boolean
+    fun scheduleScan(intervals: Int, periodMillis: Long, now: Long, afterBoot: Boolean): Long?
 
     /** Removes the repeating scan. An immediate scan that has already started keeps running. */
-    fun cancelScan()
+    fun cancelScheduledScan()
 
     /**
      * POC only. One scan now, beside the repeating scan. Not part of the production API.
      * Returns false if the system refused it.
      */
     fun runNow(): Boolean
-
-    /** Millis until the periodic scan's first fire. The periodic job starts immediately, so this is 0. */
-    fun periodicStartDelayMillis(intervals: Int, periodMillis: Long, now: Long, afterBoot: Boolean): Long = 0L
 
     companion object {
         /** Periodic job from API 21. API 19–20 uses the alarm. */
@@ -60,15 +54,16 @@ internal interface ScanJobSchedulerContract {
          * Leaves a registration whose intervals match the armed value. Arms one when nothing is
          * registered, and replaces the registration when the count differs.
          */
-        fun ensureScheduled(context: Context) {
+        fun ensureScheduledScan(context: Context) {
             val scheduler = from(context)
             val settings = SettingsStore(context)
             val intervals = settings.intervals
-            if (scheduler.isScanExists() && settings.armedIntervals == intervals) {
+            if (scheduler.isScanScheduled() && settings.armedIntervals == intervals) {
                 settings.scheduleOrigin = ScheduleOrigin.EXISTING_ON_OPEN
                 return
             }
-            val intervalChanged = scheduler.isScanExists()
+            // A same-count registration already returned. Pending here means the count changed.
+            val intervalChanged = scheduler.isScanScheduled()
             val recovering = settings.nextRunAt > 0L
             val origin = when {
                 intervalChanged -> ScheduleOrigin.INTERVAL_CHANGED
@@ -80,7 +75,7 @@ internal interface ScanJobSchedulerContract {
                 recovering -> context.getString(R.string.log_schedule_recreated)
                 else -> context.getString(R.string.log_schedule_first)
             }
-            reschedule(context, afterBoot = false, origin, reason)
+            rescheduleScan(context, afterBoot = false, origin, reason)
         }
 
         /**
@@ -88,9 +83,9 @@ internal interface ScanJobSchedulerContract {
          * boot plus the stored offset. A persisted periodic job is not replaced on boot.
          * The history line is recorded here. Callers do not receive it.
          */
-        fun reschedule(context: Context, afterBoot: Boolean, origin: ScheduleOrigin, reason: String) {
+        fun rescheduleScan(context: Context, afterBoot: Boolean, origin: ScheduleOrigin, reason: String) {
             val scheduler = from(context)
-            if (scheduler.isScanExists()) scheduler.cancelScan()
+            if (scheduler.isScanScheduled()) scheduler.cancelScheduledScan()
             val armed = armNext(context, scheduler, afterBoot, origin)
             RunStore(context).append(
                 LogEntry(
@@ -122,13 +117,13 @@ internal interface ScanJobSchedulerContract {
             }
             val periodMillis = ScanWindow.periodMillis(intervals)
             val now = System.currentTimeMillis()
-            val initialDelayMillis = scheduler.periodicStartDelayMillis(intervals, periodMillis, now, afterBoot)
-            if (!scheduler.scan(initialDelayMillis, periodMillis)) {
+            val nextRunAt = scheduler.scheduleScan(intervals, periodMillis, now, afterBoot)
+            if (nextRunAt == null) {
                 settings.nextRunAt = 0L
                 settings.armedIntervals = 0
                 return false
             }
-            settings.nextRunAt = if (scheduler.usesAlarmOffset) now + initialDelayMillis else now + periodMillis
+            settings.nextRunAt = nextRunAt
             settings.armedIntervals = intervals
             settings.scheduleOrigin = origin
             return true

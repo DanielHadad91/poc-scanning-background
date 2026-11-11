@@ -44,7 +44,7 @@ class SettingsStore(context: Context) {
         get() = prefs.getLong(KEY_PHASE_OFFSET, -1L)
         set(value) = prefs.edit().putLong(KEY_PHASE_OFFSET, value).apply()
 
-    /** When this window started: the scanSchedule call that chose the offset, or the latest boot. -1 until the first arm. */
+    /** When this window started: the scheduleScan call that chose the offset, or the latest boot. -1 until the first arm. */
     var windowStartMillis: Long
         get() = prefs.getLong(KEY_WINDOW_START, -1L)
         set(value) = prefs.edit().putLong(KEY_WINDOW_START, value).apply()
@@ -54,7 +54,7 @@ class SettingsStore(context: Context) {
         get() = prefs.getInt(KEY_PHASE_INTERVALS, 0)
         set(value) = prefs.edit().putInt(KEY_PHASE_INTERVALS, value).apply()
 
-    /** Set by [com.biocatch.poc.scanningbackground.sdk.ScanningSdk.cancelScanSchedule]. Boot leaves this off. */
+    /** Set by [com.biocatch.poc.scanningbackground.sdk.ScanningSdk.cancelScheduledScan]. Boot leaves this off. */
     var scheduleCancelled: Boolean
         get() = prefs.getBoolean(KEY_SCHEDULE_CANCELLED, false)
         set(value) = prefs.edit().putBoolean(KEY_SCHEDULE_CANCELLED, value).apply()

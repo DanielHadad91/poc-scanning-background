@@ -15,7 +15,7 @@ An integrating app ships its own UI and wires the SDK through two things only: i
 | Scheduling (`ScanJobSchedulerContract`), scanning, networking/TLS, storage, data models | Code ✔ | — |
 | Permissions (`INTERNET`, `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED`, `QUERY_ALL_PACKAGES`) | — | `<uses-permission>` entries ✔ |
 | UI / Activities / strings / layouts | — (SDK has none) | All of it ✔ |
-| Entry call to start scanning | `ScanningSdk` facade ✔ | One `ScanningSdk.scanSchedule(...)` call ✔ |
+| Entry call to start scanning | `ScanningSdk` facade ✔ | One `ScanningSdk.scheduleScan(...)` call ✔ |
 
 **Why the manifest is the client's job:** component and permission declarations only take effect in the
 installed app's *merged* manifest. The SDK deliberately declares none, so the integrator stays in full
@@ -81,7 +81,7 @@ Use the SDK's **fully-qualified class names** (do not use leading-dot relative n
 import com.biocatch.poc.scanningbackground.sdk.ScanningSdk
 
 // e.g. in Application.onCreate() or your launcher Activity.onCreate()
-ScanningSdk.scanSchedule(
+ScanningSdk.scheduleScan(
     context,
     intervals = 1,
     backendDetectionUrl = "https://your-endpoint.example/collect",
@@ -89,14 +89,14 @@ ScanningSdk.scanSchedule(
 ```
 
 That is the entire integration. From here the SDK scans, uploads, records each run, and repeats.
-API 19–20 calls `setInexactRepeating` at the `scanSchedule` call and passes that call plus one stored offset as the first fire. That delivery is the scan. The offset stays until the count changes. API 21+ registers the periodic job at that call, with no offset wait, and the scan may start anywhere in the period. After boot, API 19–20 makes the same call at the boot and passes the boot plus the stored offset as the first fire. API 21+ leaves the persisted job in place. This stays off when `cancelScanSchedule` was called. The boot receiver does not scan, and a finished run does not register the next one. `setPeriodic` and `setInexactRepeating` own the repeat.
+API 19–20 calls `setInexactRepeating` at the `scheduleScan` call and passes that call plus one stored offset as the first fire. That delivery is the scan. The offset stays until the count changes. API 21+ registers the periodic job at that call, with no offset wait, and the scan may start anywhere in the period. After boot, API 19–20 makes the same call at the boot and passes the boot plus the stored offset as the first fire. API 21+ leaves the persisted job in place. This stays off when `cancelScheduledScan` was called. The boot receiver does not scan, and a finished run does not register the next one. `setPeriodic` and `setInexactRepeating` own the repeat.
 
 ## Public API (`com.biocatch.poc.scanningbackground.sdk.ScanningSdk`)
 
 | Method | Purpose |
 | --- | --- |
-| `scanSchedule(context, intervals, backendDetectionUrl?)` | Arm 1, 2, or 3 runs in 24 hours. The same count leaves the registration. A different count replaces it. A blank or non-http URL returns without changing the registration, and the scan does not run. |
-| `cancelScanSchedule(context)` | Remove the repeat. Boot does not arm it again until `scanSchedule`. |
+| `scheduleScan(context, intervals, backendDetectionUrl?)` | Arm 1, 2, or 3 runs in 24 hours. The same count leaves the registration. A different count replaces it. A blank or non-http URL returns without changing the registration, and the scan does not run. |
+| `cancelScheduledScan(context)` | Remove the repeat. Boot does not arm it again until `scheduleScan`. |
 
 ## Constraints kept by this module
 

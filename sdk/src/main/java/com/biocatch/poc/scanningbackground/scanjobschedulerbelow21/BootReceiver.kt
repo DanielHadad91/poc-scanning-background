@@ -3,6 +3,7 @@ package com.biocatch.poc.scanningbackground.scanjobschedulerbelow21
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import com.biocatch.poc.scanningbackground.model.EntryKind
 import com.biocatch.poc.scanningbackground.model.LogEntry
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin
@@ -21,9 +22,9 @@ class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) return
         val appContext = context.applicationContext
         val scheduler = ScanJobSchedulerContract.from(appContext)
-        if (!scheduler.usesAlarmOffset) return
         RunStore(appContext).append(
             LogEntry(
                 kind = EntryKind.BOOT,
@@ -43,7 +44,7 @@ class BootReceiver : BroadcastReceiver() {
             )
             return
         }
-        ScanJobSchedulerContract.reschedule(
+        ScanJobSchedulerContract.rescheduleScan(
             appContext,
             afterBoot = true,
             origin = ScheduleOrigin.AFTER_BOOT,

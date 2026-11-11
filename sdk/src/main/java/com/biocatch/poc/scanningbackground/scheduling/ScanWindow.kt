@@ -19,7 +19,7 @@ object ScanWindow {
 
     /**
      * Millis from [now] until the next [phaseOffsetMillis] inside [periodMillis].
-     * The period is counted from [windowStartMillis]: the scanSchedule call that chose this offset, or the boot.
+     * The period is counted from [windowStartMillis]: the scheduleScan call that chose this offset, or the boot.
      */
     fun delayUntilPhase(now: Long, periodMillis: Long, phaseOffsetMillis: Long, windowStartMillis: Long): Long {
         val into = floorMod(now - windowStartMillis, periodMillis)

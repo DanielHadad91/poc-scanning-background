@@ -16,38 +16,39 @@ import com.biocatch.poc.scanningbackground.scheduling.ScanJobSchedulerContract
  * process when a period is due, including after the app was swiped away, and [JobInfo.Builder.setPersisted]
  * restores that job after reboot. Boot does not register it again. There is no offset wait.
  *
- * The period starts when [scan] runs. The scan may fall anywhere inside that period.
+ * The period starts when [scheduleScan] runs. The scan may fall anywhere inside that period.
  * From API 24 the platform refuses a periodic job shorter than 15 minutes ([JobInfo.getMinPeriodMillis]).
  * This schedule is 1, 2, or 3 runs in 24 hours, so the period is 24, 12, or 8 hours and cannot reach
  * that floor. The SDK does not check it. From Android 15 (API 35) a ready network job can also wait
  * for the connectivity batch, up to about 31 minutes, and while the screen is on it may wait until
  * the screen turns off.
  *
- * Calling [scan] again on [PERIODIC_SCAN_JOB_ID] restarts the period. A finished run must not call it.
- * The repeat belongs to [JobInfo.Builder.setPeriodic]. [cancelScan] removes the periodic scan.
+ * Calling [scheduleScan] again on [PERIODIC_SCAN_JOB_ID] restarts the period. A finished run must not call it.
+ * The repeat belongs to [JobInfo.Builder.setPeriodic]. [cancelScheduledScan] removes the periodic scan.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 internal class ScanJobScheduler(private val context: Context) : ScanJobSchedulerContract {
 
     override val name: String = NAME
 
-    override val usesAlarmOffset: Boolean = false
-
     private val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
 
-    override fun isScanExists(): Boolean =
+    override fun isScanScheduled(): Boolean =
         jobScheduler.allPendingJobs.any { it.id == PERIODIC_SCAN_JOB_ID }
 
     // setPersisted requires RECEIVE_BOOT_COMPLETED, declared by the host app (an SDK declares no permissions).
+    // intervals and afterBoot belong to the alarm offset. setPeriodic cannot take a delay.
     @SuppressLint("MissingPermission")
-    override fun scan(initialDelayMillis: Long, periodMillis: Long): Boolean =
-        schedule(PERIODIC_SCAN_JOB_ID, Trigger.PERIODIC_SCAN) {
+    @Suppress("UNUSED_PARAMETER")
+    override fun scheduleScan(intervals: Int, periodMillis: Long, now: Long, afterBoot: Boolean): Long? {
+        val accepted = schedule(PERIODIC_SCAN_JOB_ID, Trigger.PERIODIC_SCAN) {
             // No override deadline: a deadline would start the job without network.
-            // setPeriodic cannot take a delay. The period starts when this call runs.
             it.setPeriodic(periodMillis)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPersisted(true)
         }
+        return if (accepted) now + periodMillis else null
+    }
 
     override fun runNow(): Boolean =
         schedule(IMMEDIATE_SCAN_JOB_ID, Trigger.IMMEDIATE_SCAN) {
@@ -65,7 +66,7 @@ internal class ScanJobScheduler(private val context: Context) : ScanJobScheduler
         }
     }
 
-    override fun cancelScan() {
+    override fun cancelScheduledScan() {
         jobScheduler.cancel(PERIODIC_SCAN_JOB_ID)
     }
 
