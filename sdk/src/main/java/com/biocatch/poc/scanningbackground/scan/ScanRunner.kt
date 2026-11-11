@@ -21,7 +21,7 @@ import java.util.UUID
  */
 class ScanRunner(private val context: Context) {
 
-    fun run(trigger: Trigger, scheduler: String): LogEntry {
+    fun run(trigger: Trigger, scheduler: String) {
         val startedAt = System.currentTimeMillis()
         val (status, detail, report) = scanAndUpload(startedAt)
         val entry = LogEntry(
@@ -37,7 +37,6 @@ class ScanRunner(private val context: Context) {
             intervalMinutes = SettingsStore(context).intervalMinutes,
         )
         RunStore(context).append(entry)
-        return entry
     }
 
     private data class RunResult(val status: RunStatus, val detail: String, val report: ScanReport?)

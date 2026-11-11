@@ -10,6 +10,7 @@ import kotlin.concurrent.thread
 /**
  * Fired by [ScanJobSchedulerBelow21] on API 19-20. goAsync() keeps the receiver alive after onReceive, but the
  * system still ends it at the broadcast timeout (about 10-60 s), which bounds how long a run may take.
+ * Public because the host manifest names this class.
  */
 class AlarmReceiver : BroadcastReceiver() {
 
@@ -17,7 +18,6 @@ class AlarmReceiver : BroadcastReceiver() {
         val appContext = context.applicationContext
         val trigger = intent.getStringExtra(EXTRA_TRIGGER)?.let(Trigger::fromStored) ?: Trigger.PERIODIC_SCAN
         // A scheduled alarm is setInexactRepeating, so the next fire is already registered.
-
         val pending = goAsync()
         thread(name = "scan-alarm") {
             try {

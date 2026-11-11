@@ -27,7 +27,7 @@ import com.biocatch.poc.scanningbackground.model.RunStatus
 import com.biocatch.poc.scanningbackground.model.ScheduleOrigin
 import com.biocatch.poc.scanningbackground.network.WebhookSiteApi
 import com.biocatch.poc.scanningbackground.scan.InstalledAppsScanner
-import com.biocatch.poc.scanningbackground.scheduling.ScanJobSchedulerContract
+import com.biocatch.poc.scanningbackground.scheduling.MissedRuns
 import com.biocatch.poc.scanningbackground.scheduling.SchedulingLimits
 import com.biocatch.poc.scanningbackground.sdk.ScanningSdk
 import com.biocatch.poc.scanningbackground.storage.RunStore
@@ -115,7 +115,9 @@ class MainActivity : LocaleAwareActivity() {
         findViewById<Button>(R.id.openLimits).setOnClickListener { startActivity(Intent(this, LimitsActivity::class.java)) }
         setUpDeviceCard()
 
-        ScanningSdk.start(this)?.let(::confirmSchedule)
+        if (settings.intervals in 1..3) {
+            ScanningSdk.scanSchedule(this, settings.intervals, null)
+        }
     }
 
     override fun onStart() {
@@ -148,7 +150,8 @@ class MainActivity : LocaleAwareActivity() {
             .setTitle(R.string.clear_history_title)
             .setMessage(R.string.clear_history_message)
             .setPositiveButton(R.string.clear_history_confirm) { _, _ ->
-                ScanningSdk.clearHistory(this)
+                runStore.clear()
+                settings.historyClearedAt = System.currentTimeMillis()
                 render()
                 toast(getString(R.string.toast_history_cleared))
             }
@@ -182,7 +185,7 @@ class MainActivity : LocaleAwareActivity() {
         }
         val entries = runStore.all()
         val scans = entries.filter { it.kind == EntryKind.SCAN }
-        val schedulerName = ScanJobSchedulerContract.from(this).name
+        val schedulerName = entries.firstOrNull()?.scheduler.orEmpty()
 
         renderBanner(scans, entries.firstOrNull { it.kind == EntryKind.SCHEDULE }, now)
         renderNextRun(now, schedulerName)
@@ -279,7 +282,13 @@ class MainActivity : LocaleAwareActivity() {
      */
     private fun renderMissedRuns(now: Long) {
         val graceMinutes = SchedulingLimits.missGraceMinutes(Build.VERSION.SDK_INT)
-        val summary = ScanningSdk.missedRuns(this, now)
+        val summary = MissedRuns.summarize(
+            history = runStore.all(),
+            now = now,
+            currentIntervalMinutes = settings.intervalMinutes,
+            graceMinutes = graceMinutes,
+            countFrom = settings.historyClearedAt,
+        )
         if (!summary.tracked) {
             missedRuns.visibility = View.GONE
             return
@@ -361,7 +370,7 @@ class MainActivity : LocaleAwareActivity() {
     }
 
     private fun runNow() {
-        toast(getString(if (ScanJobSchedulerContract.runNow(this)) R.string.toast_run_enqueued else R.string.toast_run_refused))
+        toast(getString(if (ScanningSdk.runNow(this)) R.string.toast_run_enqueued else R.string.toast_run_refused))
     }
 
     /** Stays off across leaving the app and across reboot. Apply and schedule turns it back on. */
@@ -379,14 +388,16 @@ class MainActivity : LocaleAwareActivity() {
         }
         hideKeyboard()
         val url = serverUrl.text.toString().trim()
-        ScanningSdk.scanSchedule(this, intervals, url)?.let(::confirmSchedule)
+        ScanningSdk.scanSchedule(this, intervals, url)
+        val nextRunAt = settings.nextRunAt
+        toast(
+            if (nextRunAt > 0L) {
+                getString(R.string.toast_schedule_confirmed, format.clock(nextRunAt))
+            } else {
+                getString(R.string.toast_schedule_failed)
+            }
+        )
         render()
-    }
-
-    /** The confirmation the user sees after arming: the exact next-run time, or that the system refused. */
-    private fun confirmSchedule(entry: LogEntry) {
-        val nextRunAt = entry.nextRunAt
-        toast(if (nextRunAt != null) getString(R.string.toast_schedule_confirmed, format.clock(nextRunAt)) else getString(R.string.toast_schedule_failed))
     }
 
     private fun saveServerUrl() {

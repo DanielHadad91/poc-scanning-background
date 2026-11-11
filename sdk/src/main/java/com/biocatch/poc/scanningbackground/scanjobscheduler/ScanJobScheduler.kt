@@ -17,24 +17,17 @@ import com.biocatch.poc.scanningbackground.scheduling.ScanJobSchedulerContract
  * restores that job after reboot. Boot does not register it again. There is no offset wait.
  *
  * The period starts when [scan] runs. The scan may fall anywhere inside that period.
- * [com.biocatch.poc.scanningbackground.storage.SettingsStore.nextRunAt] is the end of the current
- * period, not the clock time the system will pick. From API 24 the platform refuses a
- * periodic job shorter than 15 minutes ([JobInfo.getMinPeriodMillis]). This schedule is
- * 1, 2, or 3 runs in 24 hours, so the period is 24, 12, or 8 hours and cannot reach that
- * floor. The SDK does not check it. From Android 15 (API 35)
- * a ready network job can also wait for the connectivity batch, up to about 31 minutes, and while the
- * screen is on it may wait until the screen turns off.
+ * From API 24 the platform refuses a periodic job shorter than 15 minutes ([JobInfo.getMinPeriodMillis]).
+ * This schedule is 1, 2, or 3 runs in 24 hours, so the period is 24, 12, or 8 hours and cannot reach
+ * that floor. The SDK does not check it. From Android 15 (API 35) a ready network job can also wait
+ * for the connectivity batch, up to about 31 minutes, and while the screen is on it may wait until
+ * the screen turns off.
  *
  * Calling [scan] again on [PERIODIC_SCAN_JOB_ID] restarts the period. A finished run must not call it.
  * The repeat belongs to [JobInfo.Builder.setPeriodic]. [cancelScan] removes the periodic scan.
- * If that job is executing, [android.app.job.JobScheduler.cancel] stops it and ignores
- * [android.app.job.JobService.onStopJob]'s return value, so the job is not put back.
- *
- * WorkManager's periodic work is the same JobScheduler job plus an AndroidX dependency, so it is not
- * used. Exact repeating alarms are not a JobScheduler feature.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-class ScanJobScheduler(private val context: Context) : ScanJobSchedulerContract {
+internal class ScanJobScheduler(private val context: Context) : ScanJobSchedulerContract {
 
     override val name: String = NAME
 
@@ -47,20 +40,24 @@ class ScanJobScheduler(private val context: Context) : ScanJobSchedulerContract 
 
     // setPersisted requires RECEIVE_BOOT_COMPLETED, declared by the host app (an SDK declares no permissions).
     @SuppressLint("MissingPermission")
-    override fun scan(trigger: Trigger, initialDelayMillis: Long, periodMillis: Long): Boolean {
-        val extras = PersistableBundle().apply { putString(ScanJobService.EXTRA_TRIGGER, trigger.name) }
-        val builder = JobInfo.Builder(jobId(trigger), ComponentName(context, ScanJobService::class.java))
-            .setExtras(extras)
-        when (trigger) {
-            // No override deadline: a deadline would start the job without network and lose "send when online".
+    override fun scan(initialDelayMillis: Long, periodMillis: Long): Boolean =
+        schedule(PERIODIC_SCAN_JOB_ID, Trigger.PERIODIC_SCAN) {
+            // No override deadline: a deadline would start the job without network.
             // setPeriodic cannot take a delay. The period starts when this call runs.
-            Trigger.PERIODIC_SCAN -> builder
-                .setPeriodic(periodMillis)
+            it.setPeriodic(periodMillis)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPersisted(true)
-            // No network constraint, so being offline shows up right away as a failed run.
-            Trigger.IMMEDIATE_SCAN -> builder.setOverrideDeadline(0)
         }
+
+    override fun runNow(): Boolean =
+        schedule(IMMEDIATE_SCAN_JOB_ID, Trigger.IMMEDIATE_SCAN) {
+            it.setOverrideDeadline(0)
+        }
+
+    private fun schedule(jobId: Int, trigger: Trigger, configure: (JobInfo.Builder) -> Unit): Boolean {
+        val extras = PersistableBundle().apply { putString(ScanJobService.EXTRA_TRIGGER, trigger.name) }
+        val builder = JobInfo.Builder(jobId, ComponentName(context, ScanJobService::class.java)).setExtras(extras)
+        configure(builder)
         return try {
             jobScheduler.schedule(builder.build()) == JobScheduler.RESULT_SUCCESS
         } catch (e: IllegalArgumentException) {
@@ -72,16 +69,11 @@ class ScanJobScheduler(private val context: Context) : ScanJobSchedulerContract 
         jobScheduler.cancel(PERIODIC_SCAN_JOB_ID)
     }
 
-    private fun jobId(trigger: Trigger): Int = when (trigger) {
-        Trigger.PERIODIC_SCAN -> PERIODIC_SCAN_JOB_ID
-        Trigger.IMMEDIATE_SCAN -> IMMEDIATE_SCAN_JOB_ID
-    }
-
     companion object {
-        const val NAME = "JobScheduler"
+        internal const val NAME = "JobScheduler"
         /** Repeating scan. setPeriodic owns the repeat. */
         private const val PERIODIC_SCAN_JOB_ID = 1001
-        /** One scan now, beside the periodic scan. */
+        /** POC: one scan now, beside the periodic scan. */
         private const val IMMEDIATE_SCAN_JOB_ID = 1002
     }
 }

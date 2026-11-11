@@ -12,11 +12,10 @@ import com.biocatch.poc.scanningbackground.storage.RunStore
 import com.biocatch.poc.scanningbackground.storage.SettingsStore
 
 /**
- * API 19–20, and the forced alarm fallback. Alarms are lost on reboot, so this registers
- * [AlarmManager.setInexactRepeating] again. The first fire is the boot plus the stored offset, and
- * that delivery is the scan. A persisted JobScheduler job is left as it was: reboot does not remove
- * it, and this receiver does not register it again. A cancelled schedule stays off. This receiver
- * does not scan.
+ * API 19–20. Alarms are lost on reboot, so this registers setInexactRepeating again. The first fire
+ * is the boot plus the stored offset, and that delivery is the scan. A persisted JobScheduler job is
+ * left as it was. A cancelled schedule stays off. This receiver does not scan.
+ * Public because the host manifest names this class.
  */
 class BootReceiver : BroadcastReceiver() {
 
@@ -25,7 +24,6 @@ class BootReceiver : BroadcastReceiver() {
         val appContext = context.applicationContext
         val scheduler = ScanJobSchedulerContract.from(appContext)
         if (!scheduler.usesAlarmOffset) return
-
         RunStore(appContext).append(
             LogEntry(
                 kind = EntryKind.BOOT,
@@ -47,8 +45,9 @@ class BootReceiver : BroadcastReceiver() {
         }
         ScanJobSchedulerContract.reschedule(
             appContext,
-            appContext.getString(R.string.log_schedule_after_boot),
-            ScheduleOrigin.AFTER_BOOT,
+            afterBoot = true,
+            origin = ScheduleOrigin.AFTER_BOOT,
+            reason = appContext.getString(R.string.log_schedule_after_boot),
         )
     }
 }

@@ -11,6 +11,7 @@ import kotlin.concurrent.thread
 /**
  * API 21+. Started by the system, also when the app is closed, so it never relies on the screen.
  * The periodic scan repeats by itself. A finished scan does not register the next run.
+ * Public because the host manifest names this class and the system instantiates it.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 class ScanJobService : JobService() {

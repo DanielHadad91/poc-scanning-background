@@ -17,15 +17,19 @@ class RunStore(context: Context) {
     fun all(): List<LogEntry> = synchronized(LOCK) { read() }
 
     /** Deletes the whole local history (runs, boots, schedule events, and the success/failure counts). */
-    fun clear() = synchronized(LOCK) { file.delete() }
+    fun clear() {
+        synchronized(LOCK) { file.delete() }
+    }
 
     /** The job, the alarm, the boot receiver and the screen can all write, so writes are serialized. */
-    fun append(entry: LogEntry) = synchronized(LOCK) {
-        val updated = (listOf(entry) + read()).take(MAX_ENTRIES)
-        val array = JSONArray().apply { updated.forEach { put(it.toJson()) } }
-        val temp = File(file.parentFile, "$FILE_NAME.tmp")
-        temp.writeText(array.toString())
-        temp.renameTo(file)
+    fun append(entry: LogEntry) {
+        synchronized(LOCK) {
+            val updated = (listOf(entry) + read()).take(MAX_ENTRIES)
+            val array = JSONArray().apply { updated.forEach { put(it.toJson()) } }
+            val temp = File(file.parentFile, "$FILE_NAME.tmp")
+            temp.writeText(array.toString())
+            temp.renameTo(file)
+        }
     }
 
     private fun read(): List<LogEntry> {
